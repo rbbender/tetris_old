@@ -1,10 +1,10 @@
 CC=g++
-CFLAGS=-I../include --std=c++1y -c 
+CFLAGS=-I../include --std=c++1y -c
 
 all: tetris
 
 tetris: utility_func.o figure.o figure_position.o all_figure_positions.o field.o main.o
-	$(CC) -o tetris utility_func.o figure.o figure_position.o all_figure_positions.o field.o main.o
+	$(CC) -o tetris utility_func.o figure.o figure_position.o all_figure_positions.o field.o main.o -lX11
 
 main.o: main.cpp
 	$(CC) $(CFLAGS) main.cpp

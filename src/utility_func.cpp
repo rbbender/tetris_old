@@ -15,9 +15,3 @@ double get_time() {
     //printf("res=%f\n", res);
     return res;
 }
-
-bool kbhit() {
-    int nreadbytes;
-    ioctl(STDIN_FILENO, FIONREAD, &nreadbytes);
-    return (nreadbytes > 0);
-}

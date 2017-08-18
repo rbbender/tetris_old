@@ -7,6 +7,7 @@ class field_t {
     };
 
     const char VIS_Y = 3;
+    const char X_BLOCK_SZ = 20;
 
     char fld[SZ_Y][SZ_X];
     figure_t* current_figure;
@@ -17,11 +18,24 @@ class field_t {
     unsigned long long points;
     bool redraw_required = false;
     bool to_exit = false;
+    bool is_x = false;
+
+    Display* disp;
+    Window* wnd;
+    GC* gcwhite;
+    GC* gcblack;
+    int field_x, field_y;
+    int scor_x, scor_y;
+    int next_x, next_y;
+
 public:
     field_t();
+    int x_setup(Display*, Window*, GC*, GC*, int, int, int, int, int, int);
+    int x_render();
+    int x_draw_empty_field();
     int remove_previous();
     int render_current();
-    int render();
+    int recompose();
     int tick();
     int rotate_clockwise();
     int rotate_counterclockwise();

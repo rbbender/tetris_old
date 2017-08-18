@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
 #include <field.h>
 
 extern const char FIG_POS_COUNTS[];
@@ -50,11 +51,11 @@ void field_t::force_landing() {
     remove_previous();
     while(!is_figure_landed())
         ++(current_figure->pos_y);
-    render();
+    recompose();
     set_redraw_flag();
 }
 
-int field_t::render() {
+int field_t::recompose() {
     DEBUG_TRACE;
     DEBUG_VAR("%d\n", current_figure->current_pos->size_x);
     DEBUG_VAR("%d\n", current_figure->current_pos->size_y);
@@ -77,7 +78,7 @@ int field_t::tick() {
         return 2;
     remove_previous();
     if (is_figure_landed()) {
-        render();
+        recompose();
         points += remove_full_lines();
         delete current_figure;
         if (is_game_ended())
@@ -89,7 +90,7 @@ int field_t::tick() {
         next_position = next_figure();
     }
     else {
-        render();
+        recompose();
         current_figure->pos_y += 1;
     }
     set_redraw_flag();
@@ -101,7 +102,7 @@ int field_t::rotate_clockwise() {
     remove_previous();
     if (is_rotation_possible(current_figure->current_pos->next_pos))
         current_figure->rotate_clockwise();
-    render();
+    recompose();
     set_redraw_flag();
     return 0;
 };
@@ -110,7 +111,7 @@ int field_t::rotate_counterclockwise() {
     remove_previous();
     if (is_rotation_possible(current_figure->current_pos->prev_pos))
         current_figure->rotate_counterclockwise();
-    render();
+    recompose();
     set_redraw_flag();
     return 0;
 };
@@ -217,7 +218,7 @@ int field_t::move_left() {
     remove_previous();
     if (res = is_move_left_possible()) {
         current_figure->pos_x -= 1;
-        render();
+        recompose();
     }
     set_redraw_flag();
     DEBUG_VAR("%d\n", res);
@@ -230,7 +231,7 @@ int field_t::move_right() {
     remove_previous();
     if (res = is_move_right_possible()) {
         current_figure->pos_x += 1;
-        render();
+        recompose();
     }
     set_redraw_flag();
     DEBUG_VAR("%d\n", res);
@@ -238,8 +239,6 @@ int field_t::move_right() {
 }
 
 void field_t::print() {
-    if (!redraw_required)
-        return;
     printf("Score: %Lu\n", get_points());
     next_position->render();
     printf("\n");
@@ -249,5 +248,71 @@ void field_t::print() {
         printf("\n");
     }
     printf("-------------\n");
+}
+
+int field_t::x_setup(Display* dpy, Window* wnd, GC* gcb, GC* gcw, int fld_x, int fld_y, 
+    int score_x, int score_y, int next_blk_x, int next_blk_y) {
+    this->disp = dpy;
+    this->wnd = wnd;
+    this->gcblack = gcb;
+    this->gcwhite = gcw;
+    this->field_x = fld_x;
+    this->field_y = fld_y;
+    this->scor_x = score_x;
+    this->scor_y = score_y;
+    this->next_x = next_blk_x;
+    this->next_y = next_blk_y;
+    is_x = true;
+    return 0;
+}
+
+int field_t::x_draw_empty_field() {
+    // Border
+    XDrawRectangle(disp, *wnd, *gcwhite, field_x, field_y, X_BLOCK_SZ * (SZ_X + 2), 
+        X_BLOCK_SZ * (SZ_Y + 2));
+    XFlush(disp);
+    XDrawRectangle(disp, *wnd, *gcwhite, field_x + X_BLOCK_SZ - 1, field_y + X_BLOCK_SZ - 1, 
+        X_BLOCK_SZ * SZ_X + 1, X_BLOCK_SZ * SZ_Y + 1);
+    XFlush(disp);
+    // Flush field
+    XFillRectangle(disp, *wnd, *gcblack, field_x + X_BLOCK_SZ, field_y + X_BLOCK_SZ, 
+        X_BLOCK_SZ * SZ_X, X_BLOCK_SZ * SZ_Y);
+    XFlush(disp);
+    // Flush score
+    XFillRectangle(disp, *wnd, *gcblack, scor_x, scor_y, X_BLOCK_SZ * 6, 
+        X_BLOCK_SZ * 2);
+    XFlush(disp);
+    // Flush next figure
+    XFillRectangle(disp, *wnd, *gcblack, next_x, next_y, X_BLOCK_SZ * 4, 
+        X_BLOCK_SZ * 4);
+    XFlush(disp);
+    return 0;
+}
+
+int field_t::x_render() {
+    if (!redraw_required || !is_x)
+        return 1;
+    x_draw_empty_field();
+    int t_fld_x = field_x + X_BLOCK_SZ;
+    int t_fld_y = field_y + X_BLOCK_SZ;
+    // Draw field
+    for (int y=VIS_Y; y<SZ_Y; ++y) {
+        for (int x=0; x<SZ_X; ++x) {
+            if (fld[y][x] == '1') {
+                XFillRectangle(disp, *wnd, *gcwhite, t_fld_x + X_BLOCK_SZ * x, 
+                    t_fld_y + X_BLOCK_SZ * y, X_BLOCK_SZ, X_BLOCK_SZ);
+            }
+        }
+    }
+    for (int y=0; y<next_position->size_y; ++y)
+        for (int x=0; x<next_position->size_x; ++x)
+            if (next_position->layout[y][x] == 1)
+                XFillRectangle(disp, *wnd, *gcwhite, next_x + X_BLOCK_SZ * x, 
+                    next_y + X_BLOCK_SZ * y, X_BLOCK_SZ, X_BLOCK_SZ);
+    char s_buf[255];
+    sprintf(s_buf, "Score: %Lu", get_points());
+    XDrawString(disp, *wnd, *gcwhite, scor_x, scor_y, s_buf, strlen(s_buf));
+    XFlush(disp);
     redraw_required = false;
+    return 0;
 }
