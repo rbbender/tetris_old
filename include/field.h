@@ -1,4 +1,5 @@
 #include <figure.h>
+#include <deque>
 
 class field_t {
     enum fld_sz {
@@ -16,9 +17,11 @@ class field_t {
     int prev_y;
     int prev_x;
     unsigned long long points;
-    bool redraw_required = false;
+    bool redraw_required = true;
     bool to_exit = false;
     bool is_x = false;
+
+    std::deque<XRectangle> new_rectangles, deleted_rectangles;
 
     Display* disp;
     Window* wnd;
@@ -33,6 +36,10 @@ public:
     int x_setup(Display*, Window*, GC*, GC*, int, int, int, int, int, int);
     int x_render();
     int x_draw_empty_field();
+    int x_set_rectangle_black(int, int);
+    int x_set_rectangle_white(int, int);
+    int x_redraw_full();
+    int x_redraw_delta();
     int remove_previous();
     int render_current();
     int recompose();

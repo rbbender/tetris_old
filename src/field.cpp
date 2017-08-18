@@ -32,7 +32,7 @@ int field_t::remove_previous() {
     for (int i = 0; i < prev_position->size_y; ++i)
         for (int k = 0; k < prev_position->size_x; ++k){
             if (prev_position->layout[i][k] == 1) {
-                fld[prev_y + i][prev_x + k] = '0';
+                fld[prev_y + i][prev_x + k] = '2';
             }
         }
     DEBUG_TRACE;
@@ -52,18 +52,25 @@ void field_t::force_landing() {
     while(!is_figure_landed())
         ++(current_figure->pos_y);
     recompose();
-    set_redraw_flag();
 }
 
 int field_t::recompose() {
     DEBUG_TRACE;
-    DEBUG_VAR("%d\n", current_figure->current_pos->size_x);
-    DEBUG_VAR("%d\n", current_figure->current_pos->size_y);
     for (int i = 0; i < current_figure->current_pos->size_y; ++i)
         for (int k = 0; k < current_figure->current_pos->size_x; ++k)
             if (current_figure->current_pos->layout[i][k] == 1) {
+                if (fld[current_figure->pos_y + i][current_figure->pos_x + k] == '0')
+                    x_set_rectangle_white(current_figure->pos_x + k, 
+                        current_figure->pos_y + i);
                 fld[current_figure->pos_y + i][current_figure->pos_x + k] = '1';
             }
+    for (int i = 0; i < prev_position->size_y; ++i)
+        for (int k = 0; k < prev_position->size_x; ++k)
+            if (fld[prev_y + i][prev_x + k] == '2') {
+                x_set_rectangle_black(prev_x + k, prev_y + i);
+                fld[prev_y + i][prev_x + k] = '0';
+            }
+
     prev_y = current_figure->pos_y;
     prev_x = current_figure->pos_x;
     prev_position = current_figure->current_pos;
@@ -93,7 +100,6 @@ int field_t::tick() {
         recompose();
         current_figure->pos_y += 1;
     }
-    set_redraw_flag();
     DEBUG_TRACE;
     return 0;
 }
@@ -103,7 +109,6 @@ int field_t::rotate_clockwise() {
     if (is_rotation_possible(current_figure->current_pos->next_pos))
         current_figure->rotate_clockwise();
     recompose();
-    set_redraw_flag();
     return 0;
 };
 
@@ -112,7 +117,6 @@ int field_t::rotate_counterclockwise() {
     if (is_rotation_possible(current_figure->current_pos->prev_pos))
         current_figure->rotate_counterclockwise();
     recompose();
-    set_redraw_flag();
     return 0;
 };
 
@@ -169,6 +173,8 @@ int field_t::remove_full_lines() {
             ++cnt_lines;
         }
     }
+    if (cnt_lines)
+        set_redraw_flag();
     return cnt_lines;
 }
 
@@ -220,7 +226,6 @@ int field_t::move_left() {
         current_figure->pos_x -= 1;
         recompose();
     }
-    set_redraw_flag();
     DEBUG_VAR("%d\n", res);
     return 0;
 }
@@ -233,7 +238,6 @@ int field_t::move_right() {
         current_figure->pos_x += 1;
         recompose();
     }
-    set_redraw_flag();
     DEBUG_VAR("%d\n", res);
     return 0;
 }
@@ -269,19 +273,15 @@ int field_t::x_setup(Display* dpy, Window* wnd, GC* gcb, GC* gcw, int fld_x, int
 int field_t::x_draw_empty_field() {
     // Border
     XDrawRectangle(disp, *wnd, *gcwhite, field_x, field_y, X_BLOCK_SZ * (SZ_X + 2), 
-        X_BLOCK_SZ * (SZ_Y + 2));
-    XFlush(disp);
+        X_BLOCK_SZ * (SZ_Y - VIS_Y + 2));
     XDrawRectangle(disp, *wnd, *gcwhite, field_x + X_BLOCK_SZ - 1, field_y + X_BLOCK_SZ - 1, 
-        X_BLOCK_SZ * SZ_X + 1, X_BLOCK_SZ * SZ_Y + 1);
-    XFlush(disp);
+        X_BLOCK_SZ * SZ_X + 1, X_BLOCK_SZ * (SZ_Y - VIS_Y) + 1);
     // Flush field
     XFillRectangle(disp, *wnd, *gcblack, field_x + X_BLOCK_SZ, field_y + X_BLOCK_SZ, 
-        X_BLOCK_SZ * SZ_X, X_BLOCK_SZ * SZ_Y);
-    XFlush(disp);
+        X_BLOCK_SZ * SZ_X, X_BLOCK_SZ * (SZ_Y - VIS_Y));
     // Flush score
     XFillRectangle(disp, *wnd, *gcblack, scor_x, scor_y, X_BLOCK_SZ * 6, 
         X_BLOCK_SZ * 2);
-    XFlush(disp);
     // Flush next figure
     XFillRectangle(disp, *wnd, *gcblack, next_x, next_y, X_BLOCK_SZ * 4, 
         X_BLOCK_SZ * 4);
@@ -289,8 +289,8 @@ int field_t::x_draw_empty_field() {
     return 0;
 }
 
-int field_t::x_render() {
-    if (!redraw_required || !is_x)
+int field_t::x_redraw_full() {
+    if (!is_x)
         return 1;
     x_draw_empty_field();
     int t_fld_x = field_x + X_BLOCK_SZ;
@@ -300,7 +300,7 @@ int field_t::x_render() {
         for (int x=0; x<SZ_X; ++x) {
             if (fld[y][x] == '1') {
                 XFillRectangle(disp, *wnd, *gcwhite, t_fld_x + X_BLOCK_SZ * x, 
-                    t_fld_y + X_BLOCK_SZ * y, X_BLOCK_SZ, X_BLOCK_SZ);
+                    t_fld_y + X_BLOCK_SZ * (y - VIS_Y), X_BLOCK_SZ, X_BLOCK_SZ);
             }
         }
     }
@@ -314,5 +314,40 @@ int field_t::x_render() {
     XDrawString(disp, *wnd, *gcwhite, scor_x, scor_y, s_buf, strlen(s_buf));
     XFlush(disp);
     redraw_required = false;
+    new_rectangles.clear();
+    deleted_rectangles.clear();
     return 0;
 }
+
+int field_t::x_redraw_delta() {
+    if (!is_x)
+        return 1;
+    XFillRectangles(disp, *wnd, *gcblack, &(*(deleted_rectangles.begin())), deleted_rectangles.size());
+    XFillRectangles(disp, *wnd, *gcwhite, &(*(new_rectangles.begin())), new_rectangles.size());
+    new_rectangles.clear();
+    deleted_rectangles.clear();
+    return 0;
+}
+
+int field_t::x_render() {
+    if (redraw_required)
+        return x_redraw_full();
+    return x_redraw_delta();
+}
+
+int field_t::x_set_rectangle_black(int x, int y) {
+    DEBUG_TRACE;
+    XRectangle t {field_x + X_BLOCK_SZ * (x + 1), field_y + X_BLOCK_SZ * (y - VIS_Y + 1), X_BLOCK_SZ, X_BLOCK_SZ};
+    DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
+    deleted_rectangles.push_back(t);
+    return 0;
+}
+
+int field_t::x_set_rectangle_white(int x, int y) {
+    DEBUG_TRACE;
+    XRectangle t {field_x + X_BLOCK_SZ * (x + 1), field_y + X_BLOCK_SZ * (y - VIS_Y + 1), X_BLOCK_SZ, X_BLOCK_SZ};
+    DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
+    new_rectangles.push_back(t);
+    return 0;
+}
+

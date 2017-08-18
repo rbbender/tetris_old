@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-I../include --std=c++1y -c
+CFLAGS=-I../include --std=c++1y -c -DDEBUG
 
 all: tetris
 
