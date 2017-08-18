@@ -337,6 +337,8 @@ int field_t::x_render() {
 
 int field_t::x_set_rectangle_black(int x, int y) {
     DEBUG_TRACE;
+    if (y < VIS_Y)
+        return 0;
     XRectangle t {field_x + X_BLOCK_SZ * (x + 1), field_y + X_BLOCK_SZ * (y - VIS_Y + 1), X_BLOCK_SZ, X_BLOCK_SZ};
     DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
     deleted_rectangles.push_back(t);
@@ -345,6 +347,8 @@ int field_t::x_set_rectangle_black(int x, int y) {
 
 int field_t::x_set_rectangle_white(int x, int y) {
     DEBUG_TRACE;
+    if (y < VIS_Y)
+        return 0;
     XRectangle t {field_x + X_BLOCK_SZ * (x + 1), field_y + X_BLOCK_SZ * (y - VIS_Y + 1), X_BLOCK_SZ, X_BLOCK_SZ};
     DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
     new_rectangles.push_back(t);
