@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <figure.h>
 
-figure_t::figure_t(ENUM_FIGURES type, figure_position_t* pos, int p_y):
+figure_t::figure_t(ENUM_FIGURES type, figure_position_t* pos, short p_y):
         pos_x(4),
         pos_y(p_y),
         type(type),

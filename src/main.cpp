@@ -56,16 +56,17 @@ int process_input() {
 int update_state(int current_tics) {
     //printf("current_tics=%d\n", current_tics);
     static int next_tic;
-    static int next_level;
+    static unsigned int next_level;
     if (next_tic == 0)
         next_tic = TICS_PER_SECOND;
     if (next_level == 0)
         next_level = 5;
     if (game_field->get_points() >= next_level) {
         next_level += 5;
-        TICS_PER_SECOND *= 1.33;
-        MSEC_PER_TIC = 1.0 / TICS_PER_SECOND;
+        game_field->increase_level();
         LEVEL_START_MSEC = get_time();
+        if (tic_freq > 2)
+        	tic_freq -= 2;
         next_tic = tic_freq;
     }
     if (current_tics >= next_tic) {
@@ -100,6 +101,7 @@ int init_x() {
         if (e.type == MapNotify)
             break;
     }
+    return 0;
 }
 
 int close_x() {
@@ -118,18 +120,17 @@ int GAME_INIT(time_t seed=0) {
     init_x();
     game_field = new field_t();
     game_field->x_setup(dpy, &w, &gcb, &gcw, 0, 0, 260, 20, 260, 60);
+    game_field->x_render();
     LEVEL_START_MSEC = get_time();
+    return 0;
 }
 
 int MAIN_LOOP() {
     int tick_res = 0;
-    double prevtime = 0;
     double current, diff;
-    int tics;
     game_field->x_render();
 	while (!tick_res) {
         current = get_time() - LEVEL_START_MSEC;
-        prevtime = current;
         process_input();
         tick_res = update_state(current / MSEC_PER_TIC);
         game_field->x_render();
@@ -139,18 +140,21 @@ int MAIN_LOOP() {
         if (diff > 0)
             usleep(diff);
 	}
+	return 0;
 }
 
 int GAME_END() {
     printf("Game is over, your score is %Lu\n", game_field->get_points());
     close_x();
+    return 0;
 }
 
 int main() {
-    printf("MSEC_PER_TIC=%f\n", MSEC_PER_TIC);
+    DEBUG_VAR("%f\n", MSEC_PER_TIC);
 	GAME_INIT();
 	MAIN_LOOP();
     GAME_END();
+    return 0;
 	//print_field();
 	//std::cout << "------\n";
 }

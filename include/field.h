@@ -7,8 +7,8 @@ class field_t {
         SZ_Y=23,
     };
 
-    const char VIS_Y = 3;
-    const char X_BLOCK_SZ = 20;
+    const short VIS_Y = 3;
+    const unsigned short X_BLOCK_SZ = 20;
 
     char fld[SZ_Y][SZ_X];
     figure_t* current_figure;
@@ -27,17 +27,23 @@ class field_t {
     Window* wnd;
     GC* gcwhite;
     GC* gcblack;
-    int field_x, field_y;
+    short field_x, field_y;
     int scor_x, scor_y;
-    int next_x, next_y;
+    int level_x, level_y;
+    short next_x, next_y;
+    unsigned font_height_px;
+    XFontStruct* p_fontstruct;
+    unsigned score_sz_px;
+    unsigned level_sz_px;
+    unsigned level;
 
 public:
     field_t();
     int x_setup(Display*, Window*, GC*, GC*, int, int, int, int, int, int);
     int x_render();
     int x_draw_empty_field();
-    int x_set_rectangle_black(int, int);
-    int x_set_rectangle_white(int, int);
+    int x_set_rectangle_black(short, short);
+    int x_set_rectangle_white(short, short);
     int x_redraw_full();
     int x_redraw_delta();
     int remove_previous();
@@ -63,4 +69,5 @@ public:
     void set_exit_flag() {to_exit = true;};
     void exit();
     void force_landing();
+    void increase_level() {++level;};
 };

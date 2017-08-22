@@ -24,6 +24,9 @@ field_t::field_t() {
     prev_x = 4;
     prev_position = current_figure->current_pos;
     next_position = next_figure();
+    recompose();
+	set_redraw_flag();
+	level = 1;
     DEBUG_TRACE;
 }
 
@@ -95,11 +98,28 @@ int field_t::tick() {
         prev_position = next_position;
         prev_x = 4;
         next_position = next_figure();
+        recompose();
+        set_redraw_flag();
+//        for (int i=0; i < current_figure->current_pos->size_y; ++i)
+//        	for (int k=0; k < current_figure->current_pos->size_x; ++k)
+//        		if (current_figure->pos_y + i >= VIS_Y && current_figure->current_pos->layout[i][k])
+//        			x_set_rectangle_white(current_figure->pos_x + k, current_figure->pos_y + i);
+#ifdef DEBUG
+        DEBUG_VAR("%lu\n", new_rectangles.size());
+        DEBUG_VAR("%lu\n", deleted_rectangles.size());
+        DEBUG_VAR("%d\n", prev_x);
+        DEBUG_VAR("%d\n", prev_y);
+        DEBUG_VAR("%d\n", current_figure->pos_x);
+        DEBUG_VAR("%d\n", current_figure->pos_y);
+#endif
     }
     else {
-        recompose();
         current_figure->pos_y += 1;
+        recompose();
     }
+#ifdef DEBUG
+	print();
+#endif
     DEBUG_TRACE;
     return 0;
 }
@@ -160,7 +180,7 @@ int field_t::remove_line(int n_line) {
 }
 
 int field_t::remove_full_lines() {
-    int p_x = current_figure->pos_x;
+    //int p_x = current_figure->pos_x;
     int p_y = current_figure->pos_y;
     int cnt_lines = 0;
     for (int i = p_y; i < p_y + current_figure->current_pos->size_y; ++i) {
@@ -222,7 +242,7 @@ int field_t::move_left() {
     DEBUG_TRACE;
     bool res;
     remove_previous();
-    if (res = is_move_left_possible()) {
+    if ((res = is_move_left_possible())) {
         current_figure->pos_x -= 1;
         recompose();
     }
@@ -234,7 +254,7 @@ int field_t::move_right() {
     DEBUG_TRACE;
     bool res;
     remove_previous();
-    if (res = is_move_right_possible()) {
+    if ((res = is_move_right_possible())) {
         current_figure->pos_x += 1;
         recompose();
     }
@@ -266,6 +286,12 @@ int field_t::x_setup(Display* dpy, Window* wnd, GC* gcb, GC* gcw, int fld_x, int
     this->scor_y = score_y;
     this->next_x = next_blk_x;
     this->next_y = next_blk_y;
+    this->p_fontstruct = XQueryFont(dpy, XGContextFromGC(*gcw));
+    this->font_height_px = p_fontstruct->ascent + p_fontstruct->descent;
+    this->score_sz_px = 1;
+    this->level_x = scor_x;
+    this->level_y = scor_y + font_height_px;
+    this->level_sz_px = 1;
     is_x = true;
     return 0;
 }
@@ -280,8 +306,11 @@ int field_t::x_draw_empty_field() {
     XFillRectangle(disp, *wnd, *gcblack, field_x + X_BLOCK_SZ, field_y + X_BLOCK_SZ, 
         X_BLOCK_SZ * SZ_X, X_BLOCK_SZ * (SZ_Y - VIS_Y));
     // Flush score
-    XFillRectangle(disp, *wnd, *gcblack, scor_x, scor_y, X_BLOCK_SZ * 6, 
-        X_BLOCK_SZ * 2);
+    XFillRectangle(disp, *wnd, *gcblack, scor_x, scor_y, score_sz_px,
+        font_height_px);
+    // Flush level
+    XFillRectangle(disp, *wnd, *gcblack, level_x, level_y, level_sz_px,
+        font_height_px);
     // Flush next figure
     XFillRectangle(disp, *wnd, *gcblack, next_x, next_y, X_BLOCK_SZ * 4, 
         X_BLOCK_SZ * 4);
@@ -311,7 +340,11 @@ int field_t::x_redraw_full() {
                     next_y + X_BLOCK_SZ * y, X_BLOCK_SZ, X_BLOCK_SZ);
     char s_buf[255];
     sprintf(s_buf, "Score: %Lu", get_points());
-    XDrawString(disp, *wnd, *gcwhite, scor_x, scor_y, s_buf, strlen(s_buf));
+    score_sz_px = XTextWidth(p_fontstruct, s_buf, strlen(s_buf));
+    XDrawString(disp, *wnd, *gcwhite, scor_x, scor_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
+    sprintf(s_buf, "Level: %u", level);
+    level_sz_px = XTextWidth(p_fontstruct, s_buf, strlen(s_buf));
+    XDrawString(disp, *wnd, *gcwhite, level_x, level_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
     XFlush(disp);
     redraw_required = false;
     new_rectangles.clear();
@@ -324,6 +357,7 @@ int field_t::x_redraw_delta() {
         return 1;
     XFillRectangles(disp, *wnd, *gcblack, &(*(deleted_rectangles.begin())), deleted_rectangles.size());
     XFillRectangles(disp, *wnd, *gcwhite, &(*(new_rectangles.begin())), new_rectangles.size());
+    XFlush(disp);
     new_rectangles.clear();
     deleted_rectangles.clear();
     return 0;
@@ -335,21 +369,23 @@ int field_t::x_render() {
     return x_redraw_delta();
 }
 
-int field_t::x_set_rectangle_black(int x, int y) {
+int field_t::x_set_rectangle_black(short x, short y) {
     DEBUG_TRACE;
     if (y < VIS_Y)
         return 0;
-    XRectangle t {field_x + X_BLOCK_SZ * (x + 1), field_y + X_BLOCK_SZ * (y - VIS_Y + 1), X_BLOCK_SZ, X_BLOCK_SZ};
+    XRectangle t {(short)(field_x + X_BLOCK_SZ * (x + 1)),
+    	(short)(field_y + X_BLOCK_SZ * (y - VIS_Y + 1)), X_BLOCK_SZ, X_BLOCK_SZ};
     DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
     deleted_rectangles.push_back(t);
     return 0;
 }
 
-int field_t::x_set_rectangle_white(int x, int y) {
+int field_t::x_set_rectangle_white(short x, short y) {
     DEBUG_TRACE;
     if (y < VIS_Y)
         return 0;
-    XRectangle t {field_x + X_BLOCK_SZ * (x + 1), field_y + X_BLOCK_SZ * (y - VIS_Y + 1), X_BLOCK_SZ, X_BLOCK_SZ};
+    XRectangle t {(short)(field_x + X_BLOCK_SZ * (x + 1)),
+    	(short)(field_y + X_BLOCK_SZ * (y - VIS_Y + 1)), X_BLOCK_SZ, X_BLOCK_SZ};
     DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
     new_rectangles.push_back(t);
     return 0;
