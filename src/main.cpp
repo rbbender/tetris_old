@@ -6,14 +6,6 @@
 #include <controls.h>
 
 
-
-int TICS_PER_SECOND = 20;
-double MSEC_PER_TIC = 1.0 / TICS_PER_SECOND;
-int tic_freq = TICS_PER_SECOND;
-
-double LEVEL_START_MSEC;
-
-
 field_t* game_field;
 
 Display* dpy;

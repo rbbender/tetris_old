@@ -27,6 +27,7 @@ class field_t {
     Window* wnd;
     GC* gcwhite;
     GC* gcblack;
+    unsigned prev_offset, cur_offset;
     short field_x, field_y;
     int scor_x, scor_y;
     int level_x, level_y;
@@ -50,6 +51,7 @@ public:
     int render_current();
     int recompose();
     int tick();
+    int inter_tick(double tick_ratio);
     int rotate_clockwise();
     int rotate_counterclockwise();
     int move_left();

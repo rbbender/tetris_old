@@ -27,6 +27,7 @@ field_t::field_t() {
     recompose();
 	set_redraw_flag();
 	level = 1;
+    cur_offset = 0;
     DEBUG_TRACE;
 }
 
@@ -115,6 +116,7 @@ int field_t::tick() {
     }
     else {
         current_figure->pos_y += 1;
+
         recompose();
     }
 #ifdef DEBUG
@@ -122,6 +124,17 @@ int field_t::tick() {
 #endif
     DEBUG_TRACE;
     return 0;
+}
+
+int field_t::inter_tick(double tick_ratio) {
+    // calculate figure animation offset
+    cur_offset = tick_ratio * X_BLOCK_SZ;
+    DEBUG_VAR("%d\n", prev_offset);
+    DEBUG_VAR("%d\n", cur_offset);
+    if (cur_offset >= X_BLOCK_SZ) // to avoid rounding error 
+        cur_offset = X_BLOCK_SZ - 1;
+
+
 }
 
 int field_t::rotate_clockwise() {

@@ -13,6 +13,11 @@ typedef enum {
     FIG_T
 } ENUM_FIGURES;
 
+typedef struct {
+    char x;
+    char y;
+} FLD_POINT;
+
 struct figure_position_t {
     char size_x;
     char size_y;
@@ -20,6 +25,10 @@ struct figure_position_t {
     char layout[4][4];
     struct figure_position_t* prev_pos;
     struct figure_position_t* next_pos;
+    char cnt_upper_points;
+    char cnt_lower_points;
+    FLD_POINT upper_points[4];
+    FLD_POINT lower_points[4];
     int render();
 };
 
