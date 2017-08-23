@@ -13,6 +13,11 @@ Window w;
 GC gcw, gcb;
 unsigned whitePixel, blackPixel;
 
+const int TICS_PER_SECOND = 20;
+double LEVEL_START_MSEC;
+int tic_freq = TICS_PER_SECOND;
+double MSEC_PER_TIC = 1.0/TICS_PER_SECOND;
+
 
 int process_input() {
     static char buf[255];
@@ -65,6 +70,9 @@ int update_state(int current_tics) {
         DEBUG_VAR("%f\n", LEVEL_START_MSEC);
         next_tic += tic_freq;
         return game_field->tick();
+    }
+    else {
+    	return game_field->inter_tick((double)current_tics/next_tic);
     }
     return 0;
 }

@@ -47,6 +47,8 @@ public:
     int x_set_rectangle_white(short, short);
     int x_redraw_full();
     int x_redraw_delta();
+    int x_fill_prev_black();
+    int x_fill_cur_white();
     int remove_previous();
     int render_current();
     int recompose();

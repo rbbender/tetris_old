@@ -14,7 +14,7 @@ struct figure_position_t SQUARE_POSITIONS[] = {
         &SQUARE_POSITIONS[0],
         2, 2, 
         {{0, 0}, {1, 0}},
-        {{0, 1}, {1, 1}}};
+        {{0, 1}, {1, 1}}}};
 
 struct figure_position_t Z_POSITIONS[] = {
         {3, 2, FIG_Z, {
