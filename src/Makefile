@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-I../include --std=c++1y -c 
+CFLAGS=-I../include --std=c++1y -c
 HEADERS=../include/controls.h ../include/field.h ../include/figure.h ../include/figure_position.h ../include/utility_func.h
 
 all: tetris

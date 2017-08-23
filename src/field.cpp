@@ -36,7 +36,7 @@ int field_t::remove_previous() {
     for (int i = 0; i < prev_position->size_y; ++i)
         for (int k = 0; k < prev_position->size_x; ++k){
             if (prev_position->layout[i][k] == 1) {
-                fld[prev_y + i][prev_x + k] = '2';
+                fld[prev_y + i][prev_x + k] = '0';
             }
         }
     DEBUG_TRACE;
@@ -81,6 +81,7 @@ int field_t::tick() {
         return 2;
     remove_previous();
     if (is_figure_landed()) {
+        cur_offset = 0;
         recompose();
         points += remove_full_lines();
         delete current_figure;
@@ -120,6 +121,7 @@ int field_t::tick() {
 
 int field_t::inter_tick(double tick_ratio) {
     // calculate figure animation offset
+    DEBUG_VAR("%f\n", tick_ratio);
     cur_offset = tick_ratio * X_BLOCK_SZ;
     DEBUG_VAR("%d\n", prev_offset);
     DEBUG_VAR("%d\n", cur_offset);
@@ -397,10 +399,16 @@ int field_t::x_set_rectangle_white(short x, short y) {
 }
 
 int field_t::x_fill_prev_black() {
-	XRectangle t {(short)(field_x + X_BLOCK_SZ * (prev_x + 1)),
-		(short)(field_y + X_BLOCK_SZ * (prev_y - VIS_Y + 1) + prev_offset),
-		X_BLOCK_SZ * prev_position->size_x, X_BLOCK_SZ * prev_position->size_y};
-	deleted_rectangles.push_back(t);
+    for (int i=0; i < prev_position->size_y; ++i) {
+        if (current_figure->pos_y + i < VIS_Y)
+            continue;
+        for (int k=0; k < prev_position->size_x; ++k) {
+            XRectangle t {(short)(field_x + X_BLOCK_SZ * (prev_x + k + 1)),
+                (short)(field_y + X_BLOCK_SZ * (prev_y - VIS_Y + i + 1) + prev_offset),
+                X_BLOCK_SZ, X_BLOCK_SZ};
+            deleted_rectangles.push_back(t);
+            }
+        }
 	return 0;
 }
 
@@ -410,10 +418,12 @@ int field_t::x_fill_cur_white() {
 		if (current_figure->pos_y + i < VIS_Y)
 			continue;
 		for (int k=0; k < current_figure->current_pos->size_x; ++k) {
-			XRectangle t {(short)(field_x + X_BLOCK_SZ * (current_figure->pos_x + k + 1)),
-				(short)(field_y + X_BLOCK_SZ * (current_figure->pos_y + i - VIS_Y + 1) + cur_offset),
-				X_BLOCK_SZ, X_BLOCK_SZ};
-			new_rectangles.push_back(t);
+            if (current_figure->current_pos->layout[i][k] == 1) {
+    			XRectangle t {(short)(field_x + X_BLOCK_SZ * (current_figure->pos_x + k + 1)),
+    				(short)(field_y + X_BLOCK_SZ * (current_figure->pos_y + i - VIS_Y + 1) + cur_offset),
+    				X_BLOCK_SZ, X_BLOCK_SZ};
+    			new_rectangles.push_back(t);
+            }
 		}
 	}
 	return 0;

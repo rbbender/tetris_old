@@ -5,13 +5,16 @@
 #include <sys/ioctl.h>
 #include <utility_func.h>
 
-double get_time() {
+unsigned get_time() {
     static int basetime = 0;
+    static int baseusec = 0;
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    if (basetime == 0)
+    if (basetime == 0) {
         basetime = tv.tv_sec;
-    double res = (tv.tv_sec - basetime) + tv.tv_usec / 1000000;
+        baseusec = tv.tv_usec;
+    }
+    unsigned res = (tv.tv_sec - basetime) * 1000000 + tv.tv_usec - baseusec;
     //printf("res=%f\n", res);
     return res;
 }

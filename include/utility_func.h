@@ -10,4 +10,4 @@
 #endif
 
 
-double get_time();
+unsigned get_time();
