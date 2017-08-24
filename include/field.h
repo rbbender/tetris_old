@@ -20,6 +20,7 @@ class field_t {
     bool redraw_required = true;
     bool to_exit = false;
     bool is_x = false;
+    bool is_landed = false;
 
     std::deque<XRectangle> new_rectangles, deleted_rectangles;
 

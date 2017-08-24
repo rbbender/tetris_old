@@ -53,6 +53,7 @@ int process_input() {
 int update_state(int current_tics) {
     //printf("current_tics=%d\n", current_tics);
     static int next_tic;
+    static int prev_tic;
     static unsigned int next_level;
     if (next_tic == 0)
         next_tic = TICS_PER_SECOND;
@@ -70,12 +71,15 @@ int update_state(int current_tics) {
     }
     if (current_tics >= next_tic) {
         DEBUG_VAR("%u\n", LEVEL_START_MSEC);
+        prev_tic = next_tic;
         next_tic += tic_freq;
         //return 2;
         return game_field->tick();
     }
     else {
-    	return game_field->inter_tick((double)current_tics/next_tic);
+        DEBUG_VAR("%d\n", current_tics);
+        DEBUG_VAR("%d\n", next_tic);
+    	return game_field->inter_tick((double)(current_tics-prev_tic)/tic_freq);
     }
     return 0;
 }

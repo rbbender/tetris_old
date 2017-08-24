@@ -60,8 +60,10 @@ void field_t::force_landing() {
 
 int field_t::recompose() {
     DEBUG_TRACE;
-    x_fill_prev_black();
-    x_fill_cur_white();
+    if (!is_figure_landed()) {
+        x_fill_prev_black();
+        x_fill_cur_white();
+    }
     for (int i = 0; i < current_figure->current_pos->size_y; ++i)
         for (int k = 0; k < current_figure->current_pos->size_x; ++k)
             if (current_figure->current_pos->layout[i][k] == 1) {
@@ -79,8 +81,8 @@ int field_t::tick() {
     DEBUG_TRACE;
     if (to_exit)
         return 2;
+    cur_offset = 0;
     if (is_figure_landed()) {
-        cur_offset = 0;
         recompose();
         points += remove_full_lines();
         delete current_figure;
@@ -93,6 +95,7 @@ int field_t::tick() {
         next_position = next_figure();
         recompose();
         set_redraw_flag();
+        is_landed = false;
 //        for (int i=0; i < current_figure->current_pos->size_y; ++i)
 //        	for (int k=0; k < current_figure->current_pos->size_x; ++k)
 //        		if (current_figure->pos_y + i >= VIS_Y && current_figure->current_pos->layout[i][k])
@@ -110,14 +113,8 @@ int field_t::tick() {
     else {
 		remove_previous();
         current_figure->pos_y += 1;
-
         recompose();
-        if (is_figure_landed()) {
-        	deleted_rectangles.clear();
-        	new_rectangles.clear();
-        	DEBUG_PRINT("------------------------------\n");
         }
-    }
 #ifdef DEBUG
 	print();
 #endif
@@ -134,8 +131,8 @@ int field_t::inter_tick(double tick_ratio) {
     cur_offset = tick_ratio * X_BLOCK_SZ;
     DEBUG_VAR("%d\n", prev_offset);
     DEBUG_VAR("%d\n", cur_offset);
-    if (cur_offset >= X_BLOCK_SZ) // to avoid rounding error 
-        cur_offset = X_BLOCK_SZ - 1;
+    if (cur_offset > X_BLOCK_SZ) // to avoid rounding error 
+        cur_offset = X_BLOCK_SZ;
     x_fill_prev_black();
     x_fill_cur_white();
     return 0;
@@ -166,21 +163,28 @@ figure_position_t* field_t::next_figure() {
 
 bool field_t::is_figure_landed() {
     DEBUG_TRACE;
+    if (is_landed) {
+        DEBUG_VAR("%d\n", is_landed);
+        return true;
+    }
     int p_x = current_figure->pos_x;
     int p_y = current_figure->pos_y;
     if (p_y + current_figure->current_pos->size_y + 1 > SZ_Y) {
-		DEBUG_PRINT("is_figure_landed:true\n");
+		DEBUG_PRINT("is_figure_landed:1:true\n");
+        is_landed = true;
         return true;
     }
     for (int i=0; i < current_figure->current_pos->cnt_lower_points; ++i) {
     	char x = current_figure->current_pos->lower_points[i].x;
     	char y = current_figure->current_pos->lower_points[i].y;
     	if (fld[p_y + y + 1][p_x + x] == '1') {
-    		DEBUG_PRINT("is_figure_landed:true\n");
+    		DEBUG_PRINT("is_figure_landed:2:true\n");
+            is_landed = true;
     		return true;
     	}
     }
 	DEBUG_PRINT("is_figure_landed:false\n");
+    is_landed = false;
     return false;
 }
 
@@ -382,6 +386,14 @@ int field_t::x_redraw_delta() {
         return 1;
     DEBUG_VAR("%lu\n", deleted_rectangles.size());
     DEBUG_VAR("%lu\n", new_rectangles.size());
+#ifdef DEBUG
+    DEBUG_PRINT("x_redraw_delta: deleted_rectangles:\n");
+    for (std::deque<XRectangle>::iterator i=deleted_rectangles.begin(); i != deleted_rectangles.end(); ++i)
+        DEBUG_PRINT("x=%d y=%d\n", i->x, i->y);
+    DEBUG_PRINT("x_redraw_delta: new_rectangles:\n");
+    for (std::deque<XRectangle>::iterator i=new_rectangles.begin(); i != new_rectangles.end(); ++i)
+        DEBUG_PRINT("x=%d y=%d\n", i->x, i->y);
+#endif
     XFillRectangles(disp, *wnd, *gcblack, &(*(deleted_rectangles.begin())), deleted_rectangles.size());
     XFillRectangles(disp, *wnd, *gcwhite, &(*(new_rectangles.begin())), new_rectangles.size());
     XFlush(disp);
