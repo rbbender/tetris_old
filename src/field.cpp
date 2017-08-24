@@ -79,7 +79,6 @@ int field_t::tick() {
     DEBUG_TRACE;
     if (to_exit)
         return 2;
-    remove_previous();
     if (is_figure_landed()) {
         cur_offset = 0;
         recompose();
@@ -106,11 +105,18 @@ int field_t::tick() {
         DEBUG_VAR("%d\n", current_figure->pos_x);
         DEBUG_VAR("%d\n", current_figure->pos_y);
 #endif
+        //return 2;
     }
     else {
+		remove_previous();
         current_figure->pos_y += 1;
 
         recompose();
+        if (is_figure_landed()) {
+        	deleted_rectangles.clear();
+        	new_rectangles.clear();
+        	DEBUG_PRINT("------------------------------\n");
+        }
     }
 #ifdef DEBUG
 	print();
@@ -120,13 +126,18 @@ int field_t::tick() {
 }
 
 int field_t::inter_tick(double tick_ratio) {
+	if (is_figure_landed())
+		return 0;
     // calculate figure animation offset
     DEBUG_VAR("%f\n", tick_ratio);
+    prev_offset = cur_offset;
     cur_offset = tick_ratio * X_BLOCK_SZ;
     DEBUG_VAR("%d\n", prev_offset);
     DEBUG_VAR("%d\n", cur_offset);
     if (cur_offset >= X_BLOCK_SZ) // to avoid rounding error 
         cur_offset = X_BLOCK_SZ - 1;
+    x_fill_prev_black();
+    x_fill_cur_white();
     return 0;
 }
 
@@ -156,13 +167,20 @@ figure_position_t* field_t::next_figure() {
 bool field_t::is_figure_landed() {
     DEBUG_TRACE;
     int p_x = current_figure->pos_x;
-    int p_y = current_figure->pos_y + 1;
-    if (p_y + current_figure->current_pos->size_y > SZ_Y)
+    int p_y = current_figure->pos_y;
+    if (p_y + current_figure->current_pos->size_y + 1 > SZ_Y) {
+		DEBUG_PRINT("is_figure_landed:true\n");
         return true;
-    for (int i = 0; i < current_figure->current_pos->size_y; ++i)
-        for (int k = 0; k < current_figure->current_pos->size_x; ++k)
-            if (fld[p_y + i][p_x + k] == '1' && current_figure->current_pos->layout[i][k] == 1)
-                return true;
+    }
+    for (int i=0; i < current_figure->current_pos->cnt_lower_points; ++i) {
+    	char x = current_figure->current_pos->lower_points[i].x;
+    	char y = current_figure->current_pos->lower_points[i].y;
+    	if (fld[p_y + y + 1][p_x + x] == '1') {
+    		DEBUG_PRINT("is_figure_landed:true\n");
+    		return true;
+    	}
+    }
+	DEBUG_PRINT("is_figure_landed:false\n");
     return false;
 }
 
@@ -359,8 +377,11 @@ int field_t::x_redraw_full() {
 }
 
 int field_t::x_redraw_delta() {
+	DEBUG_TRACE;
     if (!is_x)
         return 1;
+    DEBUG_VAR("%lu\n", deleted_rectangles.size());
+    DEBUG_VAR("%lu\n", new_rectangles.size());
     XFillRectangles(disp, *wnd, *gcblack, &(*(deleted_rectangles.begin())), deleted_rectangles.size());
     XFillRectangles(disp, *wnd, *gcwhite, &(*(new_rectangles.begin())), new_rectangles.size());
     XFlush(disp);
@@ -380,6 +401,7 @@ int field_t::x_set_rectangle_black(short x, short y) {
     DEBUG_TRACE;
     if (y < VIS_Y)
         return 0;
+
     XRectangle t {(short)(field_x + X_BLOCK_SZ * (x + 1)),
     	(short)(field_y + X_BLOCK_SZ * (y - VIS_Y + 1)), X_BLOCK_SZ, X_BLOCK_SZ};
     DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
@@ -400,7 +422,7 @@ int field_t::x_set_rectangle_white(short x, short y) {
 
 int field_t::x_fill_prev_black() {
     for (int i=0; i < prev_position->size_y; ++i) {
-        if (current_figure->pos_y + i < VIS_Y)
+        if (prev_y + i < VIS_Y)
             continue;
         for (int k=0; k < prev_position->size_x; ++k) {
             XRectangle t {(short)(field_x + X_BLOCK_SZ * (prev_x + k + 1)),
