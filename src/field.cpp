@@ -124,7 +124,7 @@ int field_t::tick() {
 
 int field_t::inter_tick(double tick_ratio) {
 	if (is_figure_landed())
-		return 0;
+		return 1;
     // calculate figure animation offset
     DEBUG_VAR("%f\n", tick_ratio);
     prev_offset = cur_offset;
@@ -143,6 +143,7 @@ int field_t::rotate_clockwise() {
     if (is_rotation_possible(current_figure->current_pos->next_pos))
         current_figure->rotate_clockwise();
     recompose();
+    new_rectangles.clear();
     return 0;
 };
 
@@ -151,6 +152,7 @@ int field_t::rotate_counterclockwise() {
     if (is_rotation_possible(current_figure->current_pos->prev_pos))
         current_figure->rotate_counterclockwise();
     recompose();
+    new_rectangles.clear();
     return 0;
 };
 
@@ -273,6 +275,7 @@ int field_t::move_left() {
     if ((res = is_move_left_possible())) {
         current_figure->pos_x -= 1;
         recompose();
+        new_rectangles.clear();
     }
     DEBUG_VAR("%d\n", res);
     return 0;
@@ -285,6 +288,7 @@ int field_t::move_right() {
     if ((res = is_move_right_possible())) {
         current_figure->pos_x += 1;
         recompose();
+        new_rectangles.clear();
     }
     DEBUG_VAR("%d\n", res);
     return 0;
@@ -437,12 +441,14 @@ int field_t::x_fill_prev_black() {
         if (prev_y + i < VIS_Y)
             continue;
         for (int k=0; k < prev_position->size_x; ++k) {
-            XRectangle t {(short)(field_x + X_BLOCK_SZ * (prev_x + k + 1)),
-                (short)(field_y + X_BLOCK_SZ * (prev_y - VIS_Y + i + 1) + prev_offset),
-                X_BLOCK_SZ, X_BLOCK_SZ};
-            deleted_rectangles.push_back(t);
+            if (prev_position->layout[i][k] == 1) {
+                XRectangle t {(short)(field_x + X_BLOCK_SZ * (prev_x + k + 1)),
+                    (short)(field_y + X_BLOCK_SZ * (prev_y - VIS_Y + i + 1) + prev_offset),
+                    X_BLOCK_SZ, X_BLOCK_SZ};
+                deleted_rectangles.push_back(t);
             }
         }
+    }
 	return 0;
 }
 

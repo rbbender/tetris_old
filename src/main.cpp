@@ -17,6 +17,7 @@ const int TICS_PER_SECOND = 20;
 unsigned LEVEL_START_MSEC;
 int tic_freq = TICS_PER_SECOND;
 unsigned MSEC_PER_TIC = 1000000/TICS_PER_SECOND;
+int prev_tic = 0, next_tic = TICS_PER_SECOND;
 
 
 int process_input() {
@@ -52,11 +53,8 @@ int process_input() {
 
 int update_state(int current_tics) {
     //printf("current_tics=%d\n", current_tics);
-    static int next_tic;
-    static int prev_tic;
     static unsigned int next_level;
-    if (next_tic == 0)
-        next_tic = TICS_PER_SECOND;
+    int inter_tic_res;
     if (next_level == 0)
         next_level = 5;
     DEBUG_VAR("%d\n", current_tics);
@@ -79,7 +77,12 @@ int update_state(int current_tics) {
     else {
         DEBUG_VAR("%d\n", current_tics);
         DEBUG_VAR("%d\n", next_tic);
-    	return game_field->inter_tick((double)(current_tics-prev_tic)/tic_freq);
+        inter_tic_res = game_field->inter_tick((double)(current_tics-prev_tic)/tic_freq);
+        if (inter_tic_res == 1) {
+            prev_tic = current_tics;
+            next_tic = current_tics + 1;
+        }
+
     }
     return 0;
 }
