@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <field.h>
 #include <controls.h>
+#include <colors.h>
 
 
 field_t* game_field;
@@ -93,6 +94,10 @@ int init_x() {
     dpy = XOpenDisplay(0);
     blackPixel = BlackPixel(dpy, DefaultScreen(dpy));
     whitePixel = WhitePixel(dpy, DefaultScreen(dpy));
+    if (colors_fill(dpy, DefaultScreen(dpy)) < 0) {
+        printf("ERROR: unable to initialize colors, exiting...");
+        exit(1);
+    }
     w = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 
         0, 400, 600, 0, blackPixel, 
         blackPixel);

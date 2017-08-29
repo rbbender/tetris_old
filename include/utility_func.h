@@ -1,3 +1,4 @@
+#include <stdio.h>
 
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, args...) do {printf(fmt, ##args);} while(false)
