@@ -65,7 +65,9 @@ int update_state(int current_tics) {
         LEVEL_START_MSEC = get_time();
         if (tic_freq > 2)
         	tic_freq -= 2;
+        prev_tic = 0;
         next_tic = tic_freq;
+        return 0;
     }
     if (current_tics >= next_tic) {
         DEBUG_VAR("%u\n", LEVEL_START_MSEC);

@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cassert>
 #include <field.h>
 
 extern const char FIG_POS_COUNTS[];
@@ -127,6 +128,7 @@ int field_t::inter_tick(double tick_ratio) {
 		return 1;
     // calculate figure animation offset
     DEBUG_VAR("%f\n", tick_ratio);
+	assert(tick_ratio >= 0.0);
     prev_offset = cur_offset;
     cur_offset = tick_ratio * X_BLOCK_SZ;
     DEBUG_VAR("%d\n", prev_offset);
@@ -276,6 +278,7 @@ int field_t::move_left() {
         current_figure->pos_x -= 1;
         recompose();
         new_rectangles.clear();
+        is_landed = false;
     }
     DEBUG_VAR("%d\n", res);
     return 0;
@@ -289,6 +292,7 @@ int field_t::move_right() {
         current_figure->pos_x += 1;
         recompose();
         new_rectangles.clear();
+        is_landed = false;
     }
     DEBUG_VAR("%d\n", res);
     return 0;
