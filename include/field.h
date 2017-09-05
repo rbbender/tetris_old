@@ -14,6 +14,7 @@ class field_t {
     figure_t* current_figure;
     figure_position_t* prev_position;
     figure_position_t* next_position;
+    ENUM_COLORS cur_color, next_color;
     int prev_y;
     int prev_x;
     unsigned long long points;
@@ -26,8 +27,7 @@ class field_t {
 
     Display* disp;
     Window* wnd;
-    GC* gcwhite;
-    GC* gcblack;
+    GC gcs[NUM_COLORS];
     unsigned prev_offset, cur_offset;
     short field_x, field_y;
     int scor_x, scor_y;
@@ -41,7 +41,7 @@ class field_t {
 
 public:
     field_t();
-    int x_setup(Display*, Window*, GC*, GC*, int, int, int, int, int, int);
+    int x_setup(Display*, Window*, int, int, int, int, int, int);
     int x_render();
     int x_draw_empty_field();
     int x_set_rectangle_black(short, short);
@@ -50,6 +50,7 @@ public:
     int x_redraw_delta();
     int x_fill_prev_black();
     int x_fill_cur_white();
+    GC x_get_gc_for_color(ENUM_COLORS);
     int remove_previous();
     int render_current();
     int recompose();

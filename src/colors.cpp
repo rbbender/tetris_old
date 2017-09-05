@@ -2,7 +2,7 @@
 #include <colors.h>
 
 char const* color_names[NUM_COLORS] = {"Black", "Red", "Orange", "Yellow", "Green", "Blue", "White"};
-int colors[NUM_COLORS];
+unsigned colors[NUM_COLORS];
 
 static char const* visual_class[] = {
    "StaticGray",
@@ -47,12 +47,17 @@ int colors_fill(Display* disp, int screen_num) {
         }
         DEBUG_PRINT("Color %s: R:G:B:::%d:%d:%d\n", color_names[col], exact_def.red,
             exact_def.green, exact_def.blue);
+        if (!XAllocColor(disp, default_cmap, &exact_def)) {
+        	DEBUG_PRINT("Unable to allocate color\n");
+        	return -1;
+        }
+        DEBUG_PRINT("Allocated color, pixel value is %u\n", exact_def.pixel);
         colors[col] = exact_def.pixel;
     }
     return 0;
 }
 
-int get_color(int color) {
+unsigned get_color(ENUM_COLORS color) {
     if (color >= 0 && color < NUM_COLORS)
         return colors[color];
     return -1;

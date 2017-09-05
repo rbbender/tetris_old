@@ -11,16 +11,18 @@ unsigned long long field_t::get_points() {
     return points;
 }
 
+
 field_t::field_t() {
     DEBUG_TRACE;
     DEBUG_VAR("%d", SZ_Y);
     printf("%d\n", SZ_Y);
     for (int i = 0; i < SZ_Y; ++i) 
             for (int k = 0; k < SZ_X; ++k) 
-                fld[i][k] = '0';
+                fld[i][k] = BLACK;
 
     figure_position_t* n = next_figure();
     prev_y = get_figure_start_position_y(n);
+    cur_color = next_color;
     current_figure = new figure_t(n->figure_type, n, prev_y);
     prev_x = 4;
     prev_position = current_figure->current_pos;
@@ -37,7 +39,7 @@ int field_t::remove_previous() {
     for (int i = 0; i < prev_position->size_y; ++i)
         for (int k = 0; k < prev_position->size_x; ++k){
             if (prev_position->layout[i][k] == 1) {
-                fld[prev_y + i][prev_x + k] = '0';
+                fld[prev_y + i][prev_x + k] = BLACK;
             }
         }
     DEBUG_TRACE;
@@ -68,7 +70,7 @@ int field_t::recompose() {
     for (int i = 0; i < current_figure->current_pos->size_y; ++i)
         for (int k = 0; k < current_figure->current_pos->size_x; ++k)
             if (current_figure->current_pos->layout[i][k] == 1) {
-                fld[current_figure->pos_y + i][current_figure->pos_x + k] = '1';
+                fld[current_figure->pos_y + i][current_figure->pos_x + k] = cur_color;
             }
     prev_y = current_figure->pos_y;
     prev_x = current_figure->pos_x;
@@ -91,6 +93,7 @@ int field_t::tick() {
             return 1;
         prev_y = get_figure_start_position_y(prev_position);
         current_figure = new figure_t(next_position->figure_type, next_position, prev_y);
+        cur_color = next_color;
         prev_position = next_position;
         prev_x = 4;
         next_position = next_figure();
@@ -160,6 +163,9 @@ int field_t::rotate_counterclockwise() {
 
 figure_position_t* field_t::next_figure() {
     DEBUG_VAR("%d\n", NUM_FIGURES);
+    int nxt_col = rand() % (NUM_COLORS - 1);
+    next_color = static_cast<ENUM_COLORS> (nxt_col + 1);
+    assert(next_color != BLACK);
     ENUM_FIGURES n = static_cast<ENUM_FIGURES> (rand() % static_cast<int>(NUM_FIGURES));
     int pos = rand() % FIG_POS_COUNTS[n];
     return &FIG_POSITIONS[n][pos];
@@ -181,7 +187,7 @@ bool field_t::is_figure_landed() {
     for (int i=0; i < current_figure->current_pos->cnt_lower_points; ++i) {
     	char x = current_figure->current_pos->lower_points[i].x;
     	char y = current_figure->current_pos->lower_points[i].y;
-    	if (fld[p_y + y + 1][p_x + x] == '1') {
+    	if (fld[p_y + y + 1][p_x + x] != BLACK) {
     		DEBUG_PRINT("is_figure_landed:2:true\n");
             is_landed = true;
     		return true;
@@ -195,18 +201,18 @@ bool field_t::is_figure_landed() {
 bool field_t::is_game_ended() {
     for (int i = 0; i < VIS_Y; ++i)
         for (int k = 0; k < SZ_X; ++k)
-            if (fld[i][k] == '1')
+            if (fld[i][k] != BLACK)
                 return true;
     return false;
 }
 
 int field_t::remove_line(int n_line) {
     for (int i = 0; i < SZ_X; ++i)
-        fld[n_line][i] = '0';
+        fld[n_line][i] = BLACK;
     for (int i = n_line; i > VIS_Y; --i)
         for (int k = 0; k < SZ_X; ++k) {
             fld[i][k] = fld[i - 1][k];
-            fld[i - 1][k] = '0';
+            fld[i - 1][k] = BLACK;
         }
     return 0;
 }
@@ -218,7 +224,7 @@ int field_t::remove_full_lines() {
     for (int i = p_y; i < p_y + current_figure->current_pos->size_y; ++i) {
         int sum = 0;
         for (int k = 0; k < SZ_X; ++k)
-            if (fld[i][k] == '1')
+            if (fld[i][k] != BLACK)
                 sum += 1;
         if (sum == SZ_X) {
             remove_line(i);
@@ -240,7 +246,7 @@ bool field_t::is_rotation_possible(figure_position_t* candidate_pos) {
         return false;
     for (int i = 0; i < candidate_pos->size_y; ++i)
         for (int k = 0; k < candidate_pos->size_x; ++k)
-            if (fld[p_y + i][p_x + k] == '1' && candidate_pos->layout[i][k] == 1)
+            if (fld[p_y + i][p_x + k] != BLACK && candidate_pos->layout[i][k] == 1)
                 return false;
     return true;
 };
@@ -252,7 +258,7 @@ bool field_t::is_move_left_possible() {
         return false;
     for (int i = 0; i < current_figure->current_pos->size_y; ++i)
         for (int k = 0; k < current_figure->current_pos->size_x; ++k)
-            if (fld[p_y + i][p_x + k] == '1' && current_figure->current_pos->layout[i][k] == 1)
+            if (fld[p_y + i][p_x + k] != BLACK && current_figure->current_pos->layout[i][k] == 1)
                 return false;
     return true;
 };
@@ -265,7 +271,7 @@ bool field_t::is_move_right_possible() {
         return false;
     for (int i = 0; i < current_figure->current_pos->size_y; ++i)
         for (int k = 0; k < current_figure->current_pos->size_x; ++k)
-            if (fld[p_y + i][p_x + k] == '1' && current_figure->current_pos->layout[i][k] == 1)
+            if (fld[p_y + i][p_x + k] != BLACK && current_figure->current_pos->layout[i][k] == 1)
                 return false;
     return true;
 };
@@ -304,25 +310,28 @@ void field_t::print() {
     printf("\n");
     for (int i = VIS_Y; i < SZ_Y; ++i) {
         for (int k = 0; k < SZ_X; ++k)
-            printf("%c", fld[i][k]);
+            printf("%d", fld[i][k]);
         printf("\n");
     }
     printf("-------------\n");
 }
 
-int field_t::x_setup(Display* dpy, Window* wnd, GC* gcb, GC* gcw, int fld_x, int fld_y, 
+int field_t::x_setup(Display* dpy, Window* wnd, int fld_x, int fld_y,
     int score_x, int score_y, int next_blk_x, int next_blk_y) {
     this->disp = dpy;
     this->wnd = wnd;
-    this->gcblack = gcb;
-    this->gcwhite = gcw;
+    for (short i=0; i < NUM_COLORS; ++i) {
+    	gcs[i] = XCreateGC(dpy, *wnd, 0, 0);
+    	XSetBackground(dpy, gcs[i], get_color(BLACK));
+    	XSetForeground(dpy, gcs[i], get_color((ENUM_COLORS)i));
+    }
     this->field_x = fld_x;
     this->field_y = fld_y;
     this->scor_x = score_x;
     this->scor_y = score_y;
     this->next_x = next_blk_x;
     this->next_y = next_blk_y;
-    this->p_fontstruct = XQueryFont(dpy, XGContextFromGC(*gcw));
+    this->p_fontstruct = XQueryFont(dpy, XGContextFromGC(x_get_gc_for_color(WHITE)));
     this->font_height_px = p_fontstruct->ascent + p_fontstruct->descent;
     this->score_sz_px = 1;
     this->level_x = scor_x;
@@ -332,23 +341,30 @@ int field_t::x_setup(Display* dpy, Window* wnd, GC* gcb, GC* gcw, int fld_x, int
     return 0;
 }
 
+GC field_t::x_get_gc_for_color(ENUM_COLORS color) {
+	if (color >= 0 && color < NUM_COLORS) {
+		return gcs[color];
+	}
+	return gcs[WHITE];
+}
+
 int field_t::x_draw_empty_field() {
     // Border
-    XDrawRectangle(disp, *wnd, *gcwhite, field_x, field_y, X_BLOCK_SZ * (SZ_X + 2), 
+    XDrawRectangle(disp, *wnd, x_get_gc_for_color(WHITE), field_x, field_y, X_BLOCK_SZ * (SZ_X + 2),
         X_BLOCK_SZ * (SZ_Y - VIS_Y + 2));
-    XDrawRectangle(disp, *wnd, *gcwhite, field_x + X_BLOCK_SZ - 1, field_y + X_BLOCK_SZ - 1, 
+    XDrawRectangle(disp, *wnd, x_get_gc_for_color(WHITE), field_x + X_BLOCK_SZ - 1, field_y + X_BLOCK_SZ - 1,
         X_BLOCK_SZ * SZ_X + 1, X_BLOCK_SZ * (SZ_Y - VIS_Y) + 1);
     // Flush field
-    XFillRectangle(disp, *wnd, *gcblack, field_x + X_BLOCK_SZ, field_y + X_BLOCK_SZ, 
+    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), field_x + X_BLOCK_SZ, field_y + X_BLOCK_SZ,
         X_BLOCK_SZ * SZ_X, X_BLOCK_SZ * (SZ_Y - VIS_Y));
     // Flush score
-    XFillRectangle(disp, *wnd, *gcblack, scor_x, scor_y, score_sz_px,
+    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), scor_x, scor_y, score_sz_px,
         font_height_px);
     // Flush level
-    XFillRectangle(disp, *wnd, *gcblack, level_x, level_y, level_sz_px,
+    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), level_x, level_y, level_sz_px,
         font_height_px);
     // Flush next figure
-    XFillRectangle(disp, *wnd, *gcblack, next_x, next_y, X_BLOCK_SZ * 4, 
+    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), next_x, next_y, X_BLOCK_SZ * 4,
         X_BLOCK_SZ * 4);
     XFlush(disp);
     return 0;
@@ -363,8 +379,8 @@ int field_t::x_redraw_full() {
     // Draw field
     for (int y=VIS_Y; y<SZ_Y; ++y) {
         for (int x=0; x<SZ_X; ++x) {
-            if (fld[y][x] == '1') {
-                XFillRectangle(disp, *wnd, *gcwhite, t_fld_x + X_BLOCK_SZ * x, 
+            if (fld[y][x] != BLACK) {
+                XFillRectangle(disp, *wnd, x_get_gc_for_color((ENUM_COLORS)fld[y][x]), t_fld_x + X_BLOCK_SZ * x,
                     t_fld_y + X_BLOCK_SZ * (y - VIS_Y), X_BLOCK_SZ, X_BLOCK_SZ);
             }
         }
@@ -372,15 +388,15 @@ int field_t::x_redraw_full() {
     for (int y=0; y<next_position->size_y; ++y)
         for (int x=0; x<next_position->size_x; ++x)
             if (next_position->layout[y][x] == 1)
-                XFillRectangle(disp, *wnd, *gcwhite, next_x + X_BLOCK_SZ * x, 
+                XFillRectangle(disp, *wnd, x_get_gc_for_color(next_color), next_x + X_BLOCK_SZ * x,
                     next_y + X_BLOCK_SZ * y, X_BLOCK_SZ, X_BLOCK_SZ);
     char s_buf[255];
     sprintf(s_buf, "Score: %Lu", get_points());
     score_sz_px = XTextWidth(p_fontstruct, s_buf, strlen(s_buf));
-    XDrawString(disp, *wnd, *gcwhite, scor_x, scor_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
+    XDrawString(disp, *wnd, x_get_gc_for_color(WHITE), scor_x, scor_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
     sprintf(s_buf, "Level: %u", level);
     level_sz_px = XTextWidth(p_fontstruct, s_buf, strlen(s_buf));
-    XDrawString(disp, *wnd, *gcwhite, level_x, level_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
+    XDrawString(disp, *wnd, x_get_gc_for_color(WHITE), level_x, level_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
     XFlush(disp);
     redraw_required = false;
     new_rectangles.clear();
@@ -402,8 +418,8 @@ int field_t::x_redraw_delta() {
     for (std::deque<XRectangle>::iterator i=new_rectangles.begin(); i != new_rectangles.end(); ++i)
         DEBUG_PRINT("x=%d y=%d\n", i->x, i->y);
 #endif
-    XFillRectangles(disp, *wnd, *gcblack, &(*(deleted_rectangles.begin())), deleted_rectangles.size());
-    XFillRectangles(disp, *wnd, *gcwhite, &(*(new_rectangles.begin())), new_rectangles.size());
+    XFillRectangles(disp, *wnd, x_get_gc_for_color(BLACK), &(*(deleted_rectangles.begin())), deleted_rectangles.size());
+    XFillRectangles(disp, *wnd, x_get_gc_for_color(cur_color), &(*(new_rectangles.begin())), new_rectangles.size());
     XFlush(disp);
     prev_offset = cur_offset;
     new_rectangles.clear();

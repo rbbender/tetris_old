@@ -14,7 +14,8 @@ typedef enum {
 } ENUM_COLORS;
 
 extern char const* color_names[NUM_COLORS];
-extern int colors[NUM_COLORS];
+extern unsigned colors[NUM_COLORS];
 
 int colors_fill(Display*, int);
-int get_color(int);
+unsigned get_color(ENUM_COLORS);
+

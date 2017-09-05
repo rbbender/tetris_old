@@ -42,3 +42,4 @@ const char NUM_FIG_POS_R = 4;
 const char NUM_FIG_POS_BACK_R = 4;
 const char NUM_FIG_POS_STICK = 2;
 const char NUM_FIG_POS_T = 4;
+

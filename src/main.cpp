@@ -4,15 +4,12 @@
 #include <unistd.h>
 #include <field.h>
 #include <controls.h>
-#include <colors.h>
 
 
 field_t* game_field;
 
 Display* dpy;
 Window w;
-GC gcw, gcb;
-unsigned whitePixel, blackPixel;
 
 const int TICS_PER_SECOND = 20;
 unsigned LEVEL_START_MSEC;
@@ -91,25 +88,17 @@ int update_state(int current_tics) {
 }
 
 int init_x() {
-    dpy = XOpenDisplay(0);
-    blackPixel = BlackPixel(dpy, DefaultScreen(dpy));
-    whitePixel = WhitePixel(dpy, DefaultScreen(dpy));
+    dpy = XOpenDisplay(NULL);
     if (colors_fill(dpy, DefaultScreen(dpy)) < 0) {
         printf("ERROR: unable to initialize colors, exiting...");
         exit(1);
     }
     w = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 
-        0, 400, 600, 0, blackPixel, 
-        blackPixel);
+        0, 400, 600, 0, get_color(BLACK),
+        get_color(BLACK));
     XSetStandardProperties(dpy, w, "Super tetris", 
         "Tetris", None, NULL, 0, NULL);
     XSelectInput(dpy, w, ExposureMask|KeyPressMask|StructureNotifyMask);
-    gcw = XCreateGC(dpy, w, 0, 0);
-    gcb = XCreateGC(dpy, w, 0, 0);
-    XSetForeground(dpy, gcw, whitePixel);
-    XSetBackground(dpy, gcw, blackPixel);
-    XSetBackground(dpy, gcb, blackPixel);
-    XSetForeground(dpy, gcb, blackPixel);
     XClearWindow(dpy, w);
     XMapRaised(dpy, w);
     while (true) {
@@ -122,8 +111,6 @@ int init_x() {
 }
 
 int close_x() {
-    XFreeGC(dpy, gcw);
-    XFreeGC(dpy, gcb);
     XDestroyWindow(dpy, w);
     XCloseDisplay(dpy);
     return 0;
@@ -137,7 +124,7 @@ int GAME_INIT(time_t seed=0) {
     printf("MSEC_PER_TIC = %u\n", MSEC_PER_TIC);
     init_x();
     game_field = new field_t();
-    game_field->x_setup(dpy, &w, &gcb, &gcw, 0, 0, 260, 20, 260, 60);
+    game_field->x_setup(dpy, &w, 0, 0, 260, 20, 260, 60);
     game_field->x_render();
     return 0;
 }
