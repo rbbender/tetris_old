@@ -51,7 +51,7 @@ int colors_fill(Display* disp, int screen_num) {
         	DEBUG_PRINT("Unable to allocate color\n");
         	return -1;
         }
-        DEBUG_PRINT("Allocated color, pixel value is %u\n", exact_def.pixel);
+        DEBUG_PRINT("Allocated color, pixel value is %lu\n", exact_def.pixel);
         colors[col] = exact_def.pixel;
     }
     return 0;

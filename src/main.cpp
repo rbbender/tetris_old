@@ -26,22 +26,22 @@ int process_input() {
         XLookupString(&e.xkey, buf, 255, NULL, NULL) == 1) {
         c = buf[0];
         switch (c) {
-            case KEY_LEFT:
+            case KEY_FLD_LEFT:
                 game_field->move_left();
                 break;
-            case KEY_RIGHT:
+            case KEY_FLD_RIGHT:
                 game_field->move_right();
                 break;
-            case KEY_ROTATE:
+            case KEY_FLD_ROTATE:
                 game_field->rotate_clockwise();
                 break;
-            case KEY_ROTATE_COUNTER:
+            case KEY_FLD_ROTATE_COUNTER:
                 game_field->rotate_counterclockwise();
                 break;
-            case KEY_EXIT:
+            case KEY_FLD_EXIT:
                 game_field->exit();
                 break;
-            case KEY_FORCE:
+            case KEY_FLD_FORCE:
                 game_field->force_landing();
                 break;
         }

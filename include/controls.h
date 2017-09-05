@@ -1,8 +1,8 @@
 typedef enum {
-    KEY_LEFT = 'h',
-    KEY_RIGHT = 'l',
-    KEY_ROTATE = 'j',
-    KEY_ROTATE_COUNTER = 'k',
-    KEY_EXIT = 'q',
-    KEY_FORCE = ' '
+    KEY_FLD_LEFT = 'h',
+    KEY_FLD_RIGHT = 'l',
+    KEY_FLD_ROTATE = 'j',
+    KEY_FLD_ROTATE_COUNTER = 'k',
+    KEY_FLD_EXIT = 'q',
+    KEY_FLD_FORCE = ' '
 } ENUM_CONTROLS;
