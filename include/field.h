@@ -1,5 +1,8 @@
 #include <figure.h>
 #include <deque>
+#include <utility>
+
+typedef std::pair<int, int> FieldAddr_t;
 
 class field_t {
     enum fld_sz {
@@ -20,37 +23,19 @@ class field_t {
     unsigned long long points;
     bool redraw_required = true;
     bool to_exit = false;
-    bool is_x = false;
     bool is_landed = false;
 
-    std::deque<XRectangle> new_rectangles, deleted_rectangles;
+    std::deque<FieldAddr_t> new_rectangles, deleted_rectangles;
 
-    Display* disp;
-    Window* wnd;
-    GC gcs[NUM_COLORS];
     unsigned prev_offset, cur_offset;
     short field_x, field_y;
     int scor_x, scor_y;
     int level_x, level_y;
     short next_x, next_y;
-    unsigned font_height_px;
-    XFontStruct* p_fontstruct;
-    unsigned score_sz_px;
-    unsigned level_sz_px;
     unsigned level;
 
 public:
     field_t();
-    int x_setup(Display*, Window*, int, int, int, int, int, int);
-    int x_render();
-    int x_draw_empty_field();
-    int x_set_rectangle_black(short, short);
-    int x_set_rectangle_white(short, short);
-    int x_redraw_full();
-    int x_redraw_delta();
-    int x_fill_prev_black();
-    int x_fill_cur_white();
-    GC x_get_gc_for_color(ENUM_COLORS);
     int remove_previous();
     int render_current();
     int recompose();
@@ -70,10 +55,14 @@ public:
     bool is_rotation_possible(figure_position_t* candidate_pos);
     bool is_move_left_possible();
     bool is_move_right_possible();
+    int get_field_size_x() {return SZ_X};
+    int get_field_size_y() {return SZ_Y};
     void print();
     void set_redraw_flag() {redraw_required = true;};
     void set_exit_flag() {to_exit = true;};
     void exit();
     void force_landing();
     void increase_level() {++level;};
+    int set_prev_remove();
+    int set_cur_new();
 };

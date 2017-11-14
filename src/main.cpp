@@ -5,11 +5,15 @@
 #include <field.h>
 #include <controls.h>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 
 field_t* game_field;
 
 Display* dpy;
 Window w;
+GLFWwindow* wnd;
 
 const int TICS_PER_SECOND = 20;
 unsigned LEVEL_START_MSEC;
@@ -18,35 +22,8 @@ unsigned MSEC_PER_TIC = 1000000/TICS_PER_SECOND;
 int prev_tic = 0, next_tic = TICS_PER_SECOND;
 
 
-int process_input() {
-    static char buf[255];
-    XEvent e;
-    int c;
-    if (XCheckWindowEvent(dpy, w, KeyPressMask, &e) == True && 
-        XLookupString(&e.xkey, buf, 255, NULL, NULL) == 1) {
-        c = buf[0];
-        switch (c) {
-            case KEY_FLD_LEFT:
-                game_field->move_left();
-                break;
-            case KEY_FLD_RIGHT:
-                game_field->move_right();
-                break;
-            case KEY_FLD_ROTATE:
-                game_field->rotate_clockwise();
-                break;
-            case KEY_FLD_ROTATE_COUNTER:
-                game_field->rotate_counterclockwise();
-                break;
-            case KEY_FLD_EXIT:
-                game_field->exit();
-                break;
-            case KEY_FLD_FORCE:
-                game_field->force_landing();
-                break;
-        }
-    }
-    return 0;
+int x_process_input() {
+
 }
 
 int update_state(int current_tics) {
@@ -88,26 +65,7 @@ int update_state(int current_tics) {
 }
 
 int init_x() {
-    dpy = XOpenDisplay(NULL);
-    if (colors_fill(dpy, DefaultScreen(dpy)) < 0) {
-        printf("ERROR: unable to initialize colors, exiting...");
-        exit(1);
-    }
-    w = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), 0, 
-        0, 400, 600, 0, get_color(BLACK),
-        get_color(BLACK));
-    XSetStandardProperties(dpy, w, "Super tetris", 
-        "Tetris", None, NULL, 0, NULL);
-    XSelectInput(dpy, w, ExposureMask|KeyPressMask|StructureNotifyMask);
-    XClearWindow(dpy, w);
-    XMapRaised(dpy, w);
-    while (true) {
-        XEvent e;
-        XNextEvent(dpy, &e);
-        if (e.type == MapNotify)
-            break;
-    }
-    return 0;
+
 }
 
 int close_x() {
@@ -116,7 +74,39 @@ int close_x() {
     return 0;
 }
 
-int GAME_INIT(time_t seed=0) {
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+	glViewport(0, 0, width, height);
+}
+
+int init_gl() {
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	wnd = glfwCreateWindow(640, 480, "Tetris", NULL, NULL);
+	if (!wnd){
+		printf("Unable to create window!\n");
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(wnd);
+	glfwSetFramebufferSizeCallback(wnd, framebuffer_size_callback);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		printf("Unable to initialize GLAD\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int close_gl() {
+	glfwTerminate();
+	return 0;
+}
+
+int GAME_INIT_X(time_t seed=0) {
     if (seed == 0)
         seed = time(NULL);
     srand(seed);
@@ -126,6 +116,19 @@ int GAME_INIT(time_t seed=0) {
     game_field = new field_t();
     game_field->x_setup(dpy, &w, 0, 0, 260, 20, 260, 60);
     game_field->x_render();
+    return 0;
+}
+
+int GAME_INIT_GL(time_t seed=0) {
+    if (seed == 0)
+        seed = time(NULL);
+    srand(seed);
+    printf("Initialized game with seed = %ld\n", seed);
+    printf("MSEC_PER_TIC = %u\n", MSEC_PER_TIC);
+    init_gl();
+    game_field = new field_t();
+    game_field->gl_setup();
+    game_field->gl_render();
     return 0;
 }
 
@@ -139,7 +142,7 @@ int MAIN_LOOP() {
 	while (!tick_res) {
         current = get_time() - LEVEL_START_MSEC;
         DEBUG_VAR("%u\n", current);
-        process_input();
+        x_process_input();
         rounded_tic = current/MSEC_PER_TIC;
         tick_res = update_state(rounded_tic);
         game_field->x_render();
@@ -154,17 +157,24 @@ int MAIN_LOOP() {
 	return 0;
 }
 
-int GAME_END() {
+int GAME_END_X() {
     printf("Game is over, your score is %Lu\n", game_field->get_points());
     close_x();
     return 0;
 }
 
+
+int GAME_END_GL() {
+    printf("Game is over, your score is %Lu\n", game_field->get_points());
+    close_gl();
+    return 0;
+}
+
 int main() {
     DEBUG_VAR("%u\n", MSEC_PER_TIC);
-	GAME_INIT();
+	GAME_INIT_GL();
 	MAIN_LOOP();
-    GAME_END();
+    GAME_END_GL();
     return 0;
 	//print_field();
 	//std::cout << "------\n";
