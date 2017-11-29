@@ -13,11 +13,12 @@ XRenderer::XRenderer(field_t* pFld):
 	pDsp(nullptr),
 	wnd(0),
 	pFontStruct(nullptr),
-	szWndX(0), szWndY(0),
+	posWndX(0), posWndY(0),
 	posScoreX(0), posScoreY(0),
 	posLevelX(0), posLevelY(0),
-	szFldBlkX(0), szFldBlkY(0),
-	szFontHeightPx(0)
+	posNextX(0), posNextY(0),
+	szFontHeightPx(0),
+	szPrevOffset(0), szCurOffset(0)
 {}
 
 int XRenderer::init() {
@@ -39,7 +40,13 @@ int XRenderer::init() {
         if (e.type == MapNotify)
             break;
     }
+    setup(0, 0, SZ_BLOCK_PX * (szFldBlkX + 3), SZ_BLOCK_PX, SZ_BLOCK_PX * (szFldBlkX + 3), 3*SZ_BLOCK_PX);
     return 0;
+}
+
+XRenderer::~XRenderer() {
+    XDestroyWindow(pDsp, wnd);
+    XCloseDisplay(pDsp);
 }
 
 
@@ -74,20 +81,30 @@ int XRenderer::process_input() {
     return 0;
 }
 
-int XRenderer::setup(int fld_x, int fld_y, int score_x, int score_y, int next_blk_x, int next_blk_y) {
+int XRenderer::render(double ratio) {
+	if (pField->is_redraw_required())
+		return redraw_full();
+	else
+		return redraw_delta();
+}
+
+int XRenderer::setup(unsigned short fld_x, unsigned short fld_y, unsigned short score_x, unsigned short score_y,
+		unsigned short next_blk_x, unsigned short next_blk_y) {
     for (short i=0; i < NUM_COLORS; ++i) {
     	gcs[i] = XCreateGC(pDsp, wnd, 0, 0);
     	XSetBackground(pDsp, gcs[i], get_color(BLACK));
     	XSetForeground(pDsp, gcs[i], get_color((ENUM_COLORS)i));
     }
-    szWndX = fld_x;
-    szWndY = fld_y;
+    posWndX = fld_x;
+    posWndY = fld_y;
     posScoreX = score_x;
     posScoreY = score_y;
     pFontStruct = XQueryFont(pDsp, XGContextFromGC(get_gc_for_color(WHITE)));
     szFontHeightPx = pFontStruct->ascent + pFontStruct->descent;
     posLevelX = posScoreX;
     posLevelY = posScoreY + szFontHeightPx;
+    posNextX = next_blk_x;
+    posNextY = next_blk_y;
     return 0;
 }
 
@@ -100,78 +117,98 @@ GC XRenderer::get_gc_for_color(ENUM_COLORS color) {
 
 int XRenderer::draw_empty_field() {
     // Border
-    XDrawRectangle(pDsp, wnd, get_gc_for_color(WHITE), szWndX, szWndY, SZ_BLOCK_PX * (SZ_X + 2),
-        X_BLOCK_SZ * (SZ_Y - VIS_Y + 2));
-    XDrawRectangle(disp, *wnd, x_get_gc_for_color(WHITE), field_x + X_BLOCK_SZ - 1, field_y + X_BLOCK_SZ - 1,
-        X_BLOCK_SZ * SZ_X + 1, X_BLOCK_SZ * (SZ_Y - VIS_Y) + 1);
+    XDrawRectangle(pDsp, wnd, get_gc_for_color(WHITE), posWndX, posWndY, SZ_BLOCK_PX * (szFldBlkX + 2),
+        SZ_BLOCK_PX * (szFldBlkY - FLD_VIS_Y + 2));
+    XDrawRectangle(pDsp, wnd, get_gc_for_color(WHITE), posWndX + SZ_BLOCK_PX - 1, posWndY + SZ_BLOCK_PX - 1,
+        SZ_BLOCK_PX * szFldBlkX + 1, SZ_BLOCK_PX * (szFldBlkY - FLD_VIS_Y) + 1);
     // Flush field
-    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), field_x + X_BLOCK_SZ, field_y + X_BLOCK_SZ,
-        X_BLOCK_SZ * SZ_X, X_BLOCK_SZ * (SZ_Y - VIS_Y));
+    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posWndX + SZ_BLOCK_PX, posWndY + SZ_BLOCK_PX,
+        SZ_BLOCK_PX * szFldBlkX, SZ_BLOCK_PX * (szFldBlkY - FLD_VIS_Y));
     // Flush score
-    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), scor_x, scor_y, score_sz_px,
-        font_height_px);
+    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posScoreX, posScoreY, szFontHeightPx * 3,
+        szFontHeightPx);
     // Flush level
-    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), level_x, level_y, level_sz_px,
-        font_height_px);
+    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posLevelX, posLevelY, szFontHeightPx * 3,
+        szFontHeightPx);
     // Flush next figure
-    XFillRectangle(disp, *wnd, x_get_gc_for_color(BLACK), next_x, next_y, X_BLOCK_SZ * 4,
-        X_BLOCK_SZ * 4);
-    XFlush(disp);
+    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posNextX, posNextY, SZ_BLOCK_PX * 4,
+        SZ_BLOCK_PX * 4);
+    XFlush(pDsp);
     return 0;
 }
 
-int field_t::x_redraw_full() {
-    if (!is_x)
-        return 1;
-    x_draw_empty_field();
-    int t_fld_x = field_x + X_BLOCK_SZ;
-    int t_fld_y = field_y + X_BLOCK_SZ;
+int XRenderer::redraw_full() {
+    draw_empty_field();
+    int t_fld_x = posWndX + SZ_BLOCK_PX;
+    int t_fld_y = posWndY + SZ_BLOCK_PX;
     // Draw field
-    for (int y=VIS_Y; y<SZ_Y; ++y) {
-        for (int x=0; x<SZ_X; ++x) {
-            if (fld[y][x] != BLACK) {
-                XFillRectangle(disp, *wnd, x_get_gc_for_color((ENUM_COLORS)fld[y][x]), t_fld_x + X_BLOCK_SZ * x,
-                    t_fld_y + X_BLOCK_SZ * (y - VIS_Y), X_BLOCK_SZ, X_BLOCK_SZ);
+    for (unsigned y=FLD_VIS_Y; y<szFldBlkY; ++y) {
+        for (unsigned x=0; x<szFldBlkX; ++x) {
+        	ENUM_COLORS cur_color = (ENUM_COLORS) pField->get_fld_pnt(x, y);
+            if (cur_color != BLACK) {
+                XFillRectangle(pDsp, wnd, get_gc_for_color(cur_color), t_fld_x + SZ_BLOCK_PX * x,
+                    t_fld_y + SZ_BLOCK_PX * (y - FLD_VIS_Y), SZ_BLOCK_PX, SZ_BLOCK_PX);
             }
         }
     }
+    figure_position_t* next_position = pField->get_next_figure();
+    ENUM_COLORS next_color = pField->get_next_color();
     for (int y=0; y<next_position->size_y; ++y)
         for (int x=0; x<next_position->size_x; ++x)
             if (next_position->layout[y][x] == 1)
-                XFillRectangle(disp, *wnd, x_get_gc_for_color(next_color), next_x + X_BLOCK_SZ * x,
-                    next_y + X_BLOCK_SZ * y, X_BLOCK_SZ, X_BLOCK_SZ);
-    char s_buf[255];
-    sprintf(s_buf, "Score: %Lu", get_points());
-    score_sz_px = XTextWidth(p_fontstruct, s_buf, strlen(s_buf));
-    XDrawString(disp, *wnd, x_get_gc_for_color(WHITE), scor_x, scor_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
-    sprintf(s_buf, "Level: %u", level);
-    level_sz_px = XTextWidth(p_fontstruct, s_buf, strlen(s_buf));
-    XDrawString(disp, *wnd, x_get_gc_for_color(WHITE), level_x, level_y + p_fontstruct->ascent, s_buf, strlen(s_buf));
-    XFlush(disp);
-    redraw_required = false;
-    new_rectangles.clear();
-    deleted_rectangles.clear();
+                XFillRectangle(pDsp, wnd, get_gc_for_color(next_color), posNextX + SZ_BLOCK_PX * x,
+                    posNextY + SZ_BLOCK_PX * y, SZ_BLOCK_PX, SZ_BLOCK_PX);
+    std::stringstream oStr;
+    oStr<< "Score: " << pField->get_points();
+    const char* pOStr = oStr.str().c_str();
+    size_t szOStr = oStr.str().length();
+    XDrawString(pDsp, wnd, get_gc_for_color(WHITE), posScoreX, posScoreY + pFontStruct->ascent, pOStr, szOStr);
+    oStr.clear();
+    oStr << "Level: " << pField->get_level();
+    pOStr = oStr.str().c_str();
+    szOStr = oStr.str().length();
+    XDrawString(pDsp, wnd, get_gc_for_color(WHITE), posLevelX, posLevelY + pFontStruct->ascent, pOStr, szOStr);
+    XFlush(pDsp);
+    pField->unset_redraw_flag();
+    pField->clear_new_rectangles();
+    pField->clear_deleted_rectangles();
     return 0;
 }
 
-int field_t::x_redraw_delta() {
+int XRenderer::redraw_delta() {
 	DEBUG_TRACE;
-    if (!is_x)
-        return 1;
+	std::deque<FieldAddr_t>& deleted_rectangles = pField->get_deleted_rectangles();
+	std::deque<FieldAddr_t>& new_rectangles = pField->get_new_rectangles();
     DEBUG_VAR("%lu\n", deleted_rectangles.size());
     DEBUG_VAR("%lu\n", new_rectangles.size());
+	std::deque<XRectangle> x_deleted_rectangles;
+	std::deque<XRectangle> x_new_rectangles;
+	for (auto i = deleted_rectangles.cbegin(), e = deleted_rectangles.cend();
+			i != e; ++i)
+	{
+		XRectangle tmp = {(short)(posWndX + SZ_BLOCK_PX * (i->first + 1)), (short)(posWndY + SZ_BLOCK_PX * (i->second + 1) + szPrevOffset),
+				SZ_BLOCK_PX, SZ_BLOCK_PX};
+		x_deleted_rectangles.push_back(tmp);
+	}
+	for (auto i = new_rectangles.cbegin(), e = new_rectangles.cend();
+			i != e; ++i)
+	{
+		XRectangle tmp = {(short)(posWndX + SZ_BLOCK_PX * (i->first + 1)), (short)(posWndY + SZ_BLOCK_PX * (i->second + 1) + szCurOffset),
+				SZ_BLOCK_PX, SZ_BLOCK_PX};
+		x_new_rectangles.push_back(tmp);
+	}
 #ifdef DEBUG
     DEBUG_PRINT("x_redraw_delta: deleted_rectangles:\n");
-    for (std::deque<XRectangle>::iterator i=deleted_rectangles.begin(); i != deleted_rectangles.end(); ++i)
+    for (auto i=x_deleted_rectangles.begin(), e = x_deleted_rectangles.end(); i != e; ++i)
         DEBUG_PRINT("x=%d y=%d\n", i->x, i->y);
     DEBUG_PRINT("x_redraw_delta: new_rectangles:\n");
-    for (std::deque<XRectangle>::iterator i=new_rectangles.begin(); i != new_rectangles.end(); ++i)
+    for (auto i=x_new_rectangles.begin(), e = x_new_rectangles.end(); i != e; ++i)
         DEBUG_PRINT("x=%d y=%d\n", i->x, i->y);
 #endif
-    XFillRectangles(disp, *wnd, x_get_gc_for_color(BLACK), &(*(deleted_rectangles.begin())), deleted_rectangles.size());
-    XFillRectangles(disp, *wnd, x_get_gc_for_color(cur_color), &(*(new_rectangles.begin())), new_rectangles.size());
-    XFlush(disp);
-    prev_offset = cur_offset;
+    XFillRectangles(pDsp, wnd, get_gc_for_color(BLACK), &(*(x_deleted_rectangles.begin())), x_deleted_rectangles.size());
+    XFillRectangles(pDsp, wnd, get_gc_for_color(pField->get_cur_color()), &(*(x_new_rectangles.begin())), x_new_rectangles.size());
+    XFlush(pDsp);
+    szPrevOffset = szCurOffset;
     new_rectangles.clear();
     deleted_rectangles.clear();
     return 0;

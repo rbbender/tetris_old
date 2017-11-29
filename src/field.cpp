@@ -64,8 +64,8 @@ void field_t::force_landing() {
 int field_t::recompose() {
     DEBUG_TRACE;
     if (!is_figure_landed()) {
-        x_fill_prev_black();
-        x_fill_cur_white();
+    	set_prev_remove();
+    	set_cur_new();
     }
     for (int i = 0; i < current_figure->current_pos->size_y; ++i)
         for (int k = 0; k < current_figure->current_pos->size_x; ++k)
@@ -138,8 +138,6 @@ int field_t::inter_tick(double tick_ratio) {
     DEBUG_VAR("%d\n", cur_offset);
     if (cur_offset > X_BLOCK_SZ) // to avoid rounding error 
         cur_offset = X_BLOCK_SZ;
-    x_fill_prev_black();
-    x_fill_cur_white();
     return 0;
 }
 
@@ -316,48 +314,13 @@ void field_t::print() {
     printf("-------------\n");
 }
 
-int field_t::x_render() {
-    if (redraw_required)
-        return x_redraw_full();
-    return x_redraw_delta();
+int field_t::clear_deleted_rectangles() {
+	deleted_rectangles.clear();
+	return 0;
 }
 
-int field_t::x_set_rectangle_black(short x, short y) {
-    DEBUG_TRACE;
-    if (y < VIS_Y)
-        return 0;
-
-    XRectangle t {(short)(field_x + X_BLOCK_SZ * (x + 1)),
-    	(short)(field_y + X_BLOCK_SZ * (y - VIS_Y + 1)), X_BLOCK_SZ, X_BLOCK_SZ};
-    DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
-    deleted_rectangles.push_back(t);
-    return 0;
-}
-
-int field_t::x_set_rectangle_white(short x, short y) {
-    DEBUG_TRACE;
-    if (y < VIS_Y)
-        return 0;
-    XRectangle t {(short)(field_x + X_BLOCK_SZ * (x + 1)),
-    	(short)(field_y + X_BLOCK_SZ * (y - VIS_Y + 1)), X_BLOCK_SZ, X_BLOCK_SZ};
-    DEBUG_PRINT("x=%d, y=%d, t.x=%d, t.y=%d, t.width=%d, t.height=%d\n", x, y, t.x, t.y, t.width, t.height);
-    new_rectangles.push_back(t);
-    return 0;
-}
-
-int field_t::x_fill_prev_black() {
-    for (int i=0; i < prev_position->size_y; ++i) {
-        if (prev_y + i < VIS_Y)
-            continue;
-        for (int k=0; k < prev_position->size_x; ++k) {
-            if (prev_position->layout[i][k] == 1) {
-                XRectangle t {(short)(field_x + X_BLOCK_SZ * (prev_x + k + 1)),
-                    (short)(field_y + X_BLOCK_SZ * (prev_y - VIS_Y + i + 1) + prev_offset),
-                    X_BLOCK_SZ, X_BLOCK_SZ};
-                deleted_rectangles.push_back(t);
-            }
-        }
-    }
+int field_t::clear_new_rectangles() {
+	new_rectangles.clear();
 	return 0;
 }
 
@@ -374,24 +337,6 @@ int field_t::set_prev_remove() {
 	return 0;
 }
 
-
-
-int field_t::x_fill_cur_white() {
-	for (int i=0; i < current_figure->current_pos->size_y; ++i) {
-		if (current_figure->pos_y + i < VIS_Y)
-			continue;
-		for (int k=0; k < current_figure->current_pos->size_x; ++k) {
-            if (current_figure->current_pos->layout[i][k] == 1) {
-    			XRectangle t {(short)(field_x + X_BLOCK_SZ * (current_figure->pos_x + k + 1)),
-    				(short)(field_y + X_BLOCK_SZ * (current_figure->pos_y + i - VIS_Y + 1) + cur_offset),
-    				X_BLOCK_SZ, X_BLOCK_SZ};
-    			new_rectangles.push_back(t);
-            }
-		}
-	}
-	return 0;
-}
-
 int field_t::set_cur_new() {
 	for (int i=0; i < current_figure->current_pos->size_y; ++i) {
 		if (current_figure->pos_y + i < VIS_Y)
@@ -405,10 +350,14 @@ int field_t::set_cur_new() {
 	return 0;
 }
 
-int field_t::gl_setup() {
-	return 0;
+int field_t::get_fld_pnt(int x, int y) {
+	return fld[y][x];
 }
 
-int field_t::gl_render() {
-	return 0;
+std::deque<FieldAddr_t>& field_t::get_new_rectangles() {
+	return new_rectangles;
+}
+
+std::deque<FieldAddr_t>& field_t::get_deleted_rectangles() {
+	return deleted_rectangles;
 }

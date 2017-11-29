@@ -10,20 +10,22 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <sstream>
 #include <controls.h>
 
 class field_t;
 
 class Renderer {
+protected:
 	field_t* pField;
-    size_t szFldBlkX, szFldBlkY; // field size in blocks
+    unsigned short szFldBlkX, szFldBlkY; // field size in blocks
+    const unsigned short FLD_VIS_Y;
 public:
-	Renderer(field_t* pFld): pField(pFld), szFldBlkX(pField->get_field_size_x()),
-		szFldBlkY(pField->get_field_size_y())
-		{};
-	int render() = 0;
-	int process_input() = 0;
-	int init() = 0;
+	Renderer(field_t* pFld);
+	virtual int process_input() = 0;
+	virtual int init() = 0;
+	virtual int render(double) = 0;
+	virtual ~Renderer();
 };
 
 #endif /* INCLUDE_RENDERER_H_ */

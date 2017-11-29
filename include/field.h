@@ -2,7 +2,7 @@
 #include <deque>
 #include <utility>
 
-typedef std::pair<int, int> FieldAddr_t;
+typedef std::pair<unsigned short, unsigned short> FieldAddr_t;
 
 class field_t {
     enum fld_sz {
@@ -55,14 +55,26 @@ public:
     bool is_rotation_possible(figure_position_t* candidate_pos);
     bool is_move_left_possible();
     bool is_move_right_possible();
-    int get_field_size_x() {return SZ_X};
-    int get_field_size_y() {return SZ_Y};
+    int get_field_size_x() {return SZ_X;};
+    int get_field_size_y() {return SZ_Y;};
+    short get_vis_y() {return VIS_Y;};
     void print();
     void set_redraw_flag() {redraw_required = true;};
+    void unset_redraw_flag() {redraw_required = false;};
     void set_exit_flag() {to_exit = true;};
     void exit();
     void force_landing();
     void increase_level() {++level;};
     int set_prev_remove();
     int set_cur_new();
+    int clear_deleted_rectangles();
+    int clear_new_rectangles();
+    int get_fld_pnt(int x, int y);
+    figure_position_t* get_next_figure() {return next_position;};
+    ENUM_COLORS get_next_color() {return next_color;};
+    unsigned get_level() {return level;};
+    std::deque<FieldAddr_t>& get_new_rectangles();
+    std::deque<FieldAddr_t>& get_deleted_rectangles();
+    ENUM_COLORS get_cur_color() {return cur_color;};
+    bool is_redraw_required() {return redraw_required;};
 };

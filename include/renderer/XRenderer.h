@@ -19,16 +19,17 @@ class XRenderer: public Renderer {
 	Window wnd;
     GC gcs[NUM_COLORS];
     XFontStruct* pFontStruct;
-    const size_t SZ_BLOCK_PX = 20;
+    const unsigned short SZ_BLOCK_PX = 20;
 
     // visual elements addresses
-    size_t szWndX, szWndY; // window size
-    size_t posScoreX, posScoreY; // current score position
-    size_t posLevelX, posLevelY; // current difficulty level position
-    size_t szFontHeightPx; // current font height
+    unsigned short posWndX, posWndY; // window size
+    unsigned short posScoreX, posScoreY; // current score position
+    unsigned short posLevelX, posLevelY; // current difficulty level position
+    unsigned short posNextX, posNextY; // next figure position
+    unsigned short szFontHeightPx; // current font height
+    unsigned short szPrevOffset, szCurOffset;
 
-
-    int setup(int, int, int, int, int, int);
+    int setup(unsigned short, unsigned short, unsigned short, unsigned short, unsigned short, unsigned short);
     int draw_empty_field();
     int set_rectangle_black(short, short);
     int set_rectangle_white(short, short);
@@ -40,9 +41,10 @@ class XRenderer: public Renderer {
 
 public:
     XRenderer(field_t* pFld);
+    ~XRenderer();
 	int init();
 	int process_input();
-	int render();
+	int render(double ratio);
 };
 
 
