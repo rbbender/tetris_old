@@ -34,7 +34,7 @@ class XRenderer: public Renderer {
     int set_rectangle_black(short, short);
     int set_rectangle_white(short, short);
     int redraw_full();
-    int redraw_delta();
+    int redraw_delta(double ratio);
     int fill_prev_black();
     int fill_cur_white();
     GC get_gc_for_color(ENUM_COLORS);

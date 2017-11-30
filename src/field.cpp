@@ -129,15 +129,9 @@ int field_t::tick() {
 int field_t::inter_tick(double tick_ratio) {
 	if (is_figure_landed())
 		return 1;
+	DEBUG_VAR("%f\n", tick_ratio);
+	recompose();
     // calculate figure animation offset
-    DEBUG_VAR("%f\n", tick_ratio);
-	assert(tick_ratio >= 0.0);
-    prev_offset = cur_offset;
-    cur_offset = tick_ratio * X_BLOCK_SZ;
-    DEBUG_VAR("%d\n", prev_offset);
-    DEBUG_VAR("%d\n", cur_offset);
-    if (cur_offset > X_BLOCK_SZ) // to avoid rounding error 
-        cur_offset = X_BLOCK_SZ;
     return 0;
 }
 
@@ -330,7 +324,7 @@ int field_t::set_prev_remove() {
             continue;
         for (int k=0; k < prev_position->size_x; ++k) {
             if (prev_position->layout[i][k] == 1) {
-                deleted_rectangles.emplace_back(i - VIS_Y, k);
+                deleted_rectangles.emplace_back(prev_y + i - VIS_Y, prev_x + k);
             }
         }
     }
@@ -343,7 +337,7 @@ int field_t::set_cur_new() {
 			continue;
 		for (int k=0; k < current_figure->current_pos->size_x; ++k) {
             if (current_figure->current_pos->layout[i][k] == 1) {
-    			new_rectangles.emplace_back(i - VIS_Y, k);
+    			new_rectangles.emplace_back(current_figure->pos_y + i - VIS_Y, current_figure->pos_x + k);
             }
 		}
 	}

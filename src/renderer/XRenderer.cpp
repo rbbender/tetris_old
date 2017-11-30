@@ -82,10 +82,12 @@ int XRenderer::process_input() {
 }
 
 int XRenderer::render(double ratio) {
+	if (ratio >= 1.0)
+		ratio = 0.0;
 	if (pField->is_redraw_required())
 		return redraw_full();
 	else
-		return redraw_delta();
+		return redraw_delta(ratio);
 }
 
 int XRenderer::setup(unsigned short fld_x, unsigned short fld_y, unsigned short score_x, unsigned short score_y,
@@ -175,7 +177,7 @@ int XRenderer::redraw_full() {
     return 0;
 }
 
-int XRenderer::redraw_delta() {
+int XRenderer::redraw_delta(double ratio) {
 	DEBUG_TRACE;
 	std::deque<FieldAddr_t>& deleted_rectangles = pField->get_deleted_rectangles();
 	std::deque<FieldAddr_t>& new_rectangles = pField->get_new_rectangles();
@@ -183,17 +185,20 @@ int XRenderer::redraw_delta() {
     DEBUG_VAR("%lu\n", new_rectangles.size());
 	std::deque<XRectangle> x_deleted_rectangles;
 	std::deque<XRectangle> x_new_rectangles;
+	szCurOffset = (short) (ratio * SZ_BLOCK_PX);
+	if (szCurOffset >= SZ_BLOCK_PX)
+		szCurOffset = SZ_BLOCK_PX;
 	for (auto i = deleted_rectangles.cbegin(), e = deleted_rectangles.cend();
 			i != e; ++i)
 	{
-		XRectangle tmp = {(short)(posWndX + SZ_BLOCK_PX * (i->first + 1)), (short)(posWndY + SZ_BLOCK_PX * (i->second + 1) + szPrevOffset),
+		XRectangle tmp = {(short)(posWndX + SZ_BLOCK_PX * (i->second + 1)), (short)(posWndY + SZ_BLOCK_PX * (i->first + 1) + szPrevOffset),
 				SZ_BLOCK_PX, SZ_BLOCK_PX};
 		x_deleted_rectangles.push_back(tmp);
 	}
 	for (auto i = new_rectangles.cbegin(), e = new_rectangles.cend();
 			i != e; ++i)
 	{
-		XRectangle tmp = {(short)(posWndX + SZ_BLOCK_PX * (i->first + 1)), (short)(posWndY + SZ_BLOCK_PX * (i->second + 1) + szCurOffset),
+		XRectangle tmp = {(short)(posWndX + SZ_BLOCK_PX * (i->second + 1)), (short)(posWndY + SZ_BLOCK_PX * (i->first + 1) + szCurOffset),
 				SZ_BLOCK_PX, SZ_BLOCK_PX};
 		x_new_rectangles.push_back(tmp);
 	}
