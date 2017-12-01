@@ -17,7 +17,6 @@ XRenderer::XRenderer(field_t* pFld):
 	posScoreX(0), posScoreY(0),
 	posLevelX(0), posLevelY(0),
 	posNextX(0), posNextY(0),
-	posPrevY(0),
 	szFontHeightPx(0),
 	szPrevOffset(0), szCurOffset(0)
 {}
@@ -130,10 +129,10 @@ int XRenderer::draw_empty_field() {
     XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posWndX + SZ_BLOCK_PX, posWndY + SZ_BLOCK_PX,
         SZ_BLOCK_PX * szFldBlkX, SZ_BLOCK_PX * (szFldBlkY - FLD_VIS_Y));
     // Flush score
-    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posScoreX, posScoreY, szFontHeightPx * 3,
+    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posScoreX, posScoreY, szFontHeightPx * 6,
         szFontHeightPx);
     // Flush level
-    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posLevelX, posLevelY, szFontHeightPx * 3,
+    XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posLevelX, posLevelY, szFontHeightPx * 6,
         szFontHeightPx);
     // Flush next figure
     XFillRectangle(pDsp, wnd, get_gc_for_color(BLACK), posNextX, posNextY, SZ_BLOCK_PX * 4,
@@ -168,6 +167,7 @@ int XRenderer::redraw_full() {
     const char* pOStr = oStr.str().c_str();
     size_t szOStr = oStr.str().length();
     XDrawString(pDsp, wnd, get_gc_for_color(WHITE), posScoreX, posScoreY + pFontStruct->ascent, pOStr, szOStr);
+    oStr.str("");
     oStr.clear();
     oStr << "Level: " << pField->get_level();
     pOStr = oStr.str().c_str();

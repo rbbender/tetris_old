@@ -26,7 +26,6 @@ class XRenderer: public Renderer {
     unsigned short posScoreX, posScoreY; // current score position
     unsigned short posLevelX, posLevelY; // current difficulty level position
     unsigned short posNextX, posNextY; // next figure position
-    unsigned short posPrevY; // previous animation Y position
     unsigned short szFontHeightPx; // current font height
     unsigned short szPrevOffset, szCurOffset;
 
