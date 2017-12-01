@@ -17,6 +17,7 @@ XRenderer::XRenderer(field_t* pFld):
 	posScoreX(0), posScoreY(0),
 	posLevelX(0), posLevelY(0),
 	posNextX(0), posNextY(0),
+	posPrevY(0),
 	szFontHeightPx(0),
 	szPrevOffset(0), szCurOffset(0)
 {}
@@ -84,8 +85,10 @@ int XRenderer::process_input() {
 int XRenderer::render(double ratio) {
 	if (ratio >= 1.0)
 		ratio = 0.0;
-	if (pField->is_redraw_required())
+	if (pField->is_redraw_required()) {
+		szPrevOffset = 0.0;
 		return redraw_full();
+	}
 	else
 		return redraw_delta(ratio);
 }
