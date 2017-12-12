@@ -1,3 +1,6 @@
+#ifndef _UTILITY_FUNC_H_
+#define _UTILITY_FUNC_H_
+
 #include <stdio.h>
 
 #ifdef DEBUG
@@ -11,4 +14,14 @@
 #endif
 
 
+const int TICS_PER_SEC = 25;
+const int MSEC_PER_TIC = 1000 / TICS_PER_SEC;
+
 unsigned get_time();
+
+unsigned long long get_current_time_ms();
+unsigned long long get_time_since_start_ms();
+unsigned long long get_tic();
+unsigned long long get_time_to_next_tic_ms();
+
+#endif
