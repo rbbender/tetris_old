@@ -5,17 +5,15 @@
 #include <field.h>
 #include <controls.h>
 
-#include <renderer/XRenderer.h>
+#include <renderer/GtkRenderer.h>
 
 field_t* game_field;
 
 Renderer* rnd;
 
-const int TICS_PER_SECOND = 20;
 unsigned LEVEL_START_MSEC;
-int tic_freq = TICS_PER_SECOND;
-unsigned MSEC_PER_TIC = 1000000/TICS_PER_SECOND;
-int prev_tic = 0, next_tic = TICS_PER_SECOND;
+int tic_freq = TICS_PER_SEC;
+int prev_tic = 0, next_tic = TICS_PER_SEC;
 
 
 int update_state(int current_tics) {
@@ -56,14 +54,15 @@ int update_state(int current_tics) {
 }
 
 
-int GAME_INIT_X(time_t seed=0) {
-    if (seed == 0)
+int GAME_INIT_GTKDA(time_t seed=0) {
+	if (seed == 0)
         seed = time(NULL);
     srand(seed);
     printf("Initialized game with seed = %ld\n", seed);
     printf("MSEC_PER_TIC = %u\n", MSEC_PER_TIC);
     game_field = new field_t();
-    rnd = new XRenderer(game_field);
+	Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("testlayout.glade");
+    rnd = new GtkRenderer(game_field, builder);
     rnd->init();
     rnd->render(0.0);
     return 0;
@@ -95,18 +94,20 @@ int MAIN_LOOP() {
 	return 0;
 }
 
-int GAME_END_X() {
+int GAME_END_GTKDA() {
     printf("Game is over, your score is %Lu\n", game_field->get_points());
     delete rnd;
     return 0;
 }
 
 
-int main() {
+int main(int argc, char* argv[]) {
     DEBUG_VAR("%u\n", MSEC_PER_TIC);
-	GAME_INIT_X();
+	GAME_INIT_GTKDA();
+	Glib::RefPtr<Gtk::Application> app = Gtk::Application::create("org.rbbender.Tetris");
+	app->run(*((GtkRenderer*)rnd)->get_mainwindow());
 	MAIN_LOOP();
-    GAME_END_X();
+    GAME_END_GTKDA();
     return 0;
 	//print_field();
 	//std::cout << "------\n";
