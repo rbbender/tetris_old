@@ -5,6 +5,7 @@
 #include <field.h>
 #include <controls.h>
 
+#include <utility_func.h>
 #include <renderer/XRenderer.h>
 
 field_t* game_field;
@@ -14,7 +15,6 @@ Renderer* rnd;
 const int TICS_PER_SECOND = 20;
 unsigned LEVEL_START_MSEC;
 int tic_freq = TICS_PER_SECOND;
-unsigned MSEC_PER_TIC = 1000000/TICS_PER_SECOND;
 int prev_tic = 0, next_tic = TICS_PER_SECOND;
 
 
@@ -74,10 +74,10 @@ int MAIN_LOOP() {
     unsigned rounded_tic = 0;
     unsigned current, diff;
     rnd->render(0.0);
-    LEVEL_START_MSEC = get_time();
+    LEVEL_START_MSEC = get_current_time_ms();
     DEBUG_VAR("%u\n", LEVEL_START_MSEC);
 	while (!tick_res) {
-        current = get_time() - LEVEL_START_MSEC;
+        current = get_current_time_ms() - LEVEL_START_MSEC;
         DEBUG_VAR("%u\n", current);
         rnd->process_input();
         rounded_tic = current/MSEC_PER_TIC;

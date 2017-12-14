@@ -14,6 +14,8 @@
 #include "colors.h"
 #include "renderer/Renderer.h"
 
+int colors_fill(Display*, int);
+
 class XRenderer: public Renderer {
 	Display* pDsp;
 	Window wnd;

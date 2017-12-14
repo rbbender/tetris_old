@@ -3,3 +3,5 @@ src/tetris
 /Debug/
 /.cproject
 /.project
+/Build*
+.autotools
