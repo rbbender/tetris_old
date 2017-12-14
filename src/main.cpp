@@ -8,6 +8,8 @@
 #include <utility_func.h>
 #include <renderer/XRenderer.h>
 
+#include <assert.h>
+
 field_t* game_field;
 
 Renderer* rnd;
@@ -15,44 +17,68 @@ Renderer* rnd;
 const int TICS_PER_SECOND = 20;
 unsigned LEVEL_START_MSEC;
 int tic_freq = TICS_PER_SECOND;
-int prev_tic = 0, next_tic = TICS_PER_SECOND;
+unsigned int tics_per_turn = TICS_PER_SEC; // tics per turn (tpt, velocity) - initially equals to our default framerate, will decrease with time
+										// means less tics per turn (milliseconds per tic is constant)
+										// initially one turn will take 1 second. Less tpt - less time being consumed by turn
+unsigned long long prev_turn = 0, next_turn = tics_per_turn;
+unsigned int next_level = 5;
+int tick_res = 0;
 
 
-int update_state(int current_tics) {
+int update_state(unsigned long long current_tics, double tic_ratio) {
     //printf("current_tics=%d\n", current_tics);
-    static unsigned int next_level;
-    int inter_tic_res;
-    if (next_level == 0)
-        next_level = 5;
+    ENUM_TIC_RESULT tic_result;
+    int result = 0;
     DEBUG_VAR("%d\n", current_tics);
-    DEBUG_VAR("%d\n", next_tic);
-    if (game_field->get_points() >= next_level) {
-        next_level += 5;
-        game_field->increase_level();
-        LEVEL_START_MSEC = get_time();
-        if (tic_freq > 2)
-        	tic_freq -= 2;
-        prev_tic = 0;
-        next_tic = tic_freq;
-        return 0;
-    }
-    if (current_tics >= next_tic) {
-        DEBUG_VAR("%u\n", LEVEL_START_MSEC);
-        prev_tic = next_tic;
-        next_tic += tic_freq;
-        //return 2;
-        return game_field->tick();
-    }
-    else {
-        DEBUG_VAR("%d\n", current_tics);
-        DEBUG_VAR("%d\n", next_tic);
-        inter_tic_res = game_field->inter_tick((double)(current_tics-prev_tic)/tic_freq);
-        if (inter_tic_res == 1) {
-            prev_tic = current_tics;
-            next_tic = current_tics + 1;
-        }
-    }
-    return 0;
+    DEBUG_VAR("%d\n", next_turn);
+
+	tic_result = game_field->tic(tic_ratio);
+
+	switch (tic_result) {
+	case TIC_RESULT_FIGURE_LANDED:
+		if (game_field->get_points() >= next_level) {
+			next_level += 5;
+			game_field->increase_level();
+			if (tics_per_turn > 2)
+				tics_per_turn -= 2;
+		};
+		prev_turn = current_tics;
+		next_turn = prev_turn + tics_per_turn;
+		break;
+	case TIC_RESULT_TURN:
+		prev_turn = current_tics;
+		next_turn = prev_turn + tics_per_turn;
+		break;
+	case TIC_RESULT_GAME_OVER:
+		result = 1;
+		break;
+	case TIC_RESULT_PLAY_ANIMATION:
+		break;
+	}
+    return result;
+}
+
+void game_timer_cb() {
+	unsigned long long current_time_ms = get_time_since_start_ms();
+	rnd->process_input();
+	auto current_tic = get_tic(current_time_ms);
+	double tic_ratio = (double) (current_tic - prev_turn) / tics_per_turn;
+	DEBUG_VAR("%llu\n", current_tic);
+	DEBUG_VAR("%llu\n", prev_turn);
+	DEBUG_VAR("%u\n", tics_per_turn);
+	DEBUG_VAR("%f\n", tic_ratio);
+	if (tic_ratio > 1.0) // to avoid rounding error
+		tic_ratio = 1.0;
+	//assert(tic_ratio <= 1.0);
+	tick_res = update_state(current_tic, tic_ratio);
+	rnd->render(tic_ratio);
+	//game_field->print();
+	//printf("rounded_tic(%u) MSEC_PER_TIC(%u) get_time(%u)\n", rounded_tic, MSEC_PER_TIC, get_time());
+	auto diff = get_time_to_next_tic_ms(current_time_ms);
+	//printf("rounded_tic(%u) current(%u) usleep(%u)\n", rounded_tic, current, diff);
+	DEBUG_VAR("%u\n", diff);
+	if (diff > 0)
+		usleep(diff);
 }
 
 
@@ -70,27 +96,11 @@ int GAME_INIT_X(time_t seed=0) {
 }
 
 int MAIN_LOOP() {
-    int tick_res = 0;
-    unsigned rounded_tic = 0;
-    unsigned current, diff;
     rnd->render(0.0);
     LEVEL_START_MSEC = get_current_time_ms();
     DEBUG_VAR("%u\n", LEVEL_START_MSEC);
 	while (!tick_res) {
-        current = get_current_time_ms() - LEVEL_START_MSEC;
-        DEBUG_VAR("%u\n", current);
-        rnd->process_input();
-        rounded_tic = current/MSEC_PER_TIC;
-        double tic_ratio = (double) (rounded_tic - prev_tic) / tic_freq;
-        tick_res = update_state(rounded_tic);
-        rnd->render(tic_ratio);
-        //game_field->print();
-        //printf("rounded_tic(%u) MSEC_PER_TIC(%u) get_time(%u)\n", rounded_tic, MSEC_PER_TIC, get_time());
-        diff = MSEC_PER_TIC * (1 + rounded_tic) - current;
-        //printf("rounded_tic(%u) current(%u) usleep(%u)\n", rounded_tic, current, diff);
-        DEBUG_VAR("%u\n", diff);
-        if (diff > 0)
-            usleep(diff);
+		game_timer_cb();
 	}
 	return 0;
 }

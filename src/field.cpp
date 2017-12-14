@@ -80,17 +80,18 @@ int field_t::recompose() {
 }
 
 
-int field_t::tick() {
+ENUM_TIC_RESULT field_t::tic(double tic_ratio) {
     DEBUG_TRACE;
+    ENUM_TIC_RESULT result = TIC_RESULT_PLAY_ANIMATION;
     if (to_exit)
-        return 2;
+        return TIC_RESULT_GAME_OVER;
     cur_offset = 0;
     if (is_figure_landed()) {
         recompose();
         points += remove_full_lines();
         delete current_figure;
         if (is_game_ended())
-            return 1;
+            return TIC_RESULT_GAME_OVER;
         prev_y = get_figure_start_position_y(prev_position);
         current_figure = new figure_t(next_position->figure_type, next_position, prev_y);
         cur_color = next_color;
@@ -112,27 +113,25 @@ int field_t::tick() {
         DEBUG_VAR("%d\n", current_figure->pos_x);
         DEBUG_VAR("%d\n", current_figure->pos_y);
 #endif
-        //return 2;
+        result = TIC_RESULT_FIGURE_LANDED;
     }
     else {
-		remove_previous();
-        current_figure->pos_y += 1;
-        recompose();
-        }
+		if (tic_ratio >= 1.0) {
+			remove_previous();
+			current_figure->pos_y += 1;
+			recompose();
+			result = TIC_RESULT_TURN;
+		}
+		else {
+			recompose();
+			result = TIC_RESULT_PLAY_ANIMATION;
+		}
+    }
 #ifdef DEBUG
 	print();
 #endif
     DEBUG_TRACE;
-    return 0;
-}
-
-int field_t::inter_tick(double tick_ratio) {
-	if (is_figure_landed())
-		return 1;
-	DEBUG_VAR("%f\n", tick_ratio);
-	recompose();
-    // calculate figure animation offset
-    return 0;
+    return result;
 }
 
 int field_t::rotate_clockwise() {

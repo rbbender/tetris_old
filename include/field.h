@@ -4,6 +4,13 @@
 
 typedef std::pair<unsigned short, unsigned short> FieldAddr_t;
 
+typedef enum {
+	TIC_RESULT_PLAY_ANIMATION,
+	TIC_RESULT_TURN,
+	TIC_RESULT_FIGURE_LANDED,
+	TIC_RESULT_GAME_OVER
+} ENUM_TIC_RESULT;
+
 class field_t {
     enum fld_sz {
         SZ_X=10,
@@ -39,8 +46,7 @@ public:
     int remove_previous();
     int render_current();
     int recompose();
-    int tick();
-    int inter_tick(double tick_ratio);
+    ENUM_TIC_RESULT tic(double tick_ratio);
     int rotate_clockwise();
     int rotate_counterclockwise();
     int move_left();

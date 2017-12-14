@@ -37,6 +37,15 @@ unsigned long long get_tic(){
 	return get_time_since_start_ms() / MSEC_PER_TIC;
 }
 
+unsigned long long get_tic(unsigned long long time_since_start_ms){
+	return time_since_start_ms / MSEC_PER_TIC;
+}
+
 unsigned long long get_time_to_next_tic_ms(){
 	return (get_tic() + 1) * MSEC_PER_TIC - get_time_since_start_ms();
+}
+
+
+unsigned long long get_time_to_next_tic_ms(unsigned long long time_since_start_ms){
+	return (get_tic() + 1) * MSEC_PER_TIC - time_since_start_ms;
 }
