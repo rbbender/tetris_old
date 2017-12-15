@@ -8,7 +8,7 @@
 #include <utility_func.h>
 #include <renderer/XRenderer.h>
 
-#include <assert.h>
+#include <glibmm/main.h>
 
 field_t* game_field;
 
@@ -21,6 +21,8 @@ unsigned int tics_per_turn = TICS_PER_SEC; // tics per turn (tpt, velocity) - in
 unsigned long long prev_turn = 0;
 unsigned int next_level = 5;
 int tick_res = 0;
+
+Glib::RefPtr<Glib::MainLoop> glib_MainLoop;
 
 
 int update_state(unsigned long long current_tics, double tic_ratio) {
@@ -72,8 +74,10 @@ void game_timer_cb() {
 	auto diff = get_time_to_next_tic_ms(current_time_ms);
 	//printf("rounded_tic(%u) current(%u) usleep(%u)\n", rounded_tic, current, diff);
 	DEBUG_VAR("%u\n", diff);
-	if (diff > 0)
-		usleep(diff);
+	if (tick_res)
+		glib_MainLoop->quit();
+	else
+		Glib::signal_timeout().connect_once(sigc::ptr_fun(game_timer_cb), diff);
 }
 
 
@@ -87,14 +91,17 @@ int GAME_INIT_X(time_t seed=0) {
     rnd = new XRenderer(game_field);
     rnd->init();
 	rnd->render(0.0);
+	glib_MainLoop = Glib::MainLoop::create();
     return 0;
 }
 
 int MAIN_LOOP() {
 	rnd->render(0.0);
-	while (!tick_res) {
-		game_timer_cb();
-	}
+	Glib::signal_timeout().connect_once(sigc::ptr_fun(game_timer_cb), get_time_to_next_tic_ms());
+	glib_MainLoop->run();
+	//while (!tick_res) {
+	//	game_timer_cb();
+	//}
 	return 0;
 }
 
