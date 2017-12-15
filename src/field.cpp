@@ -354,3 +354,36 @@ std::deque<FieldAddr_t>& field_t::get_new_rectangles() {
 std::deque<FieldAddr_t>& field_t::get_deleted_rectangles() {
 	return deleted_rectangles;
 }
+
+void field_t::set_redraw_flag() {
+	DEBUG_PRINT("set_redraw\n");
+	redraw_required = true;
+};
+
+void field_t::unset_redraw_flag() {
+	redraw_required = false;
+};
+
+void field_t::set_exit_flag() {
+	to_exit = true;
+};
+
+figure_position_t* field_t::get_next_figure() {
+	return next_position;
+};
+
+ENUM_COLORS field_t::get_next_color() {
+	return next_color;
+};
+
+unsigned field_t::get_level() {
+	return level;
+};
+
+ENUM_COLORS field_t::get_cur_color() {
+	return cur_color;
+};
+
+bool field_t::is_redraw_required() {
+	return redraw_required;
+};

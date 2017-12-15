@@ -15,12 +15,10 @@ field_t* game_field;
 Renderer* rnd;
 
 const int TICS_PER_SECOND = 20;
-unsigned LEVEL_START_MSEC;
-int tic_freq = TICS_PER_SECOND;
 unsigned int tics_per_turn = TICS_PER_SEC; // tics per turn (tpt, velocity) - initially equals to our default framerate, will decrease with time
 										// means less tics per turn (milliseconds per tic is constant)
 										// initially one turn will take 1 second. Less tpt - less time being consumed by turn
-unsigned long long prev_turn = 0, next_turn = tics_per_turn;
+unsigned long long prev_turn = 0;
 unsigned int next_level = 5;
 int tick_res = 0;
 
@@ -30,7 +28,6 @@ int update_state(unsigned long long current_tics, double tic_ratio) {
     ENUM_TIC_RESULT tic_result;
     int result = 0;
     DEBUG_VAR("%d\n", current_tics);
-    DEBUG_VAR("%d\n", next_turn);
 
 	tic_result = game_field->tic(tic_ratio);
 
@@ -43,11 +40,9 @@ int update_state(unsigned long long current_tics, double tic_ratio) {
 				tics_per_turn -= 2;
 		};
 		prev_turn = current_tics;
-		next_turn = prev_turn + tics_per_turn;
 		break;
 	case TIC_RESULT_TURN:
 		prev_turn = current_tics;
-		next_turn = prev_turn + tics_per_turn;
 		break;
 	case TIC_RESULT_GAME_OVER:
 		result = 1;
@@ -91,14 +86,12 @@ int GAME_INIT_X(time_t seed=0) {
     game_field = new field_t();
     rnd = new XRenderer(game_field);
     rnd->init();
-    rnd->render(0.0);
+	rnd->render(0.0);
     return 0;
 }
 
 int MAIN_LOOP() {
-    rnd->render(0.0);
-    LEVEL_START_MSEC = get_current_time_ms();
-    DEBUG_VAR("%u\n", LEVEL_START_MSEC);
+	rnd->render(0.0);
 	while (!tick_res) {
 		game_timer_cb();
 	}
