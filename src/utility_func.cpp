@@ -25,27 +25,3 @@ unsigned get_time() {
 unsigned long long get_current_time_ms() {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
-
-unsigned long long get_time_since_start_ms(){
-	static unsigned long long start_time;
-	if (!start_time)
-		start_time = get_current_time_ms();
-	return get_current_time_ms() - start_time;
-}
-
-unsigned long long get_tic(){
-	return get_time_since_start_ms() / MSEC_PER_TIC;
-}
-
-unsigned long long get_tic(unsigned long long time_since_start_ms){
-	return time_since_start_ms / MSEC_PER_TIC;
-}
-
-unsigned long long get_time_to_next_tic_ms(){
-	return (get_tic() + 1) * MSEC_PER_TIC - get_time_since_start_ms();
-}
-
-
-unsigned long long get_time_to_next_tic_ms(unsigned long long time_since_start_ms){
-	return (get_tic() + 1) * MSEC_PER_TIC - time_since_start_ms;
-}

@@ -42,9 +42,9 @@ class XRenderer: public Renderer {
     GC get_gc_for_color(ENUM_COLORS);
 
 public:
-    XRenderer(field_t* pFld);
+    XRenderer();
     ~XRenderer();
-	int init();
+	int init(field_t* field);
 	int process_input();
 	int render(double ratio);
 };

@@ -63,8 +63,8 @@ int colors_fill(Display* disp, int screen_num) {
 
 
 
-XRenderer::XRenderer(field_t* pFld):
-	Renderer(pFld),
+XRenderer::XRenderer():
+	Renderer(),
 	pDsp(nullptr),
 	wnd(0),
 	pFontStruct(nullptr),
@@ -76,7 +76,8 @@ XRenderer::XRenderer(field_t* pFld):
 	szPrevOffset(0), szCurOffset(0)
 {}
 
-int XRenderer::init() {
+int XRenderer::init(field_t* pFld) {
+	pField = pFld;
 	pDsp = XOpenDisplay(NULL);
     if (colors_fill(pDsp, DefaultScreen(pDsp)) < 0) {
         printf("ERROR: unable to initialize colors, exiting...");

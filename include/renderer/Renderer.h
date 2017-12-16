@@ -21,9 +21,9 @@ protected:
     unsigned short szFldBlkX, szFldBlkY; // field size in blocks
     const unsigned short FLD_VIS_Y;
 public:
-	Renderer(field_t* pFld);
+	Renderer();
 	virtual int process_input() = 0;
-	virtual int init() = 0;
+	virtual int init(field_t*) = 0;
 	virtual int render(double) = 0;
 	virtual ~Renderer();
 };
