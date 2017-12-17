@@ -5,7 +5,7 @@
  *      Author: vgratsil
  */
 
-#include <game.h>
+#include <Game.h>
 
 Game::Game(Renderer& render):
 	TICS_PER_SEC(25),
@@ -30,7 +30,7 @@ int Game::update_state(unsigned long long current_tics, double tic_ratio) {
     //printf("current_tics=%d\n", current_tics);
     ENUM_TIC_RESULT tic_result;
     int result = 0;
-    DEBUG_VAR("%d\n", current_tics);
+    DEBUG_VAR("%llu\n", current_tics);
 
 	tic_result = gameField.tic(tic_ratio);
 
@@ -62,8 +62,8 @@ void Game::game_timer_cb() {
 	auto current_tic = get_tic(current_time_ms);
 	double tic_ratio = (double) (current_tic - prev_turn_time_ms) / tics_per_turn;
 	DEBUG_VAR("%llu\n", current_tic);
-	DEBUG_VAR("%llu\n", prev_turn);
-	DEBUG_VAR("%u\n", tics_per_turn);
+	DEBUG_VAR("%llu\n", prev_turn_time_ms);
+	DEBUG_VAR("%llu\n", tics_per_turn);
 	DEBUG_VAR("%f\n", tic_ratio);
 	if (tic_ratio > 1.0) // to avoid rounding error
 		tic_ratio = 1.0;
@@ -74,7 +74,7 @@ void Game::game_timer_cb() {
 	//printf("rounded_tic(%u) MSEC_PER_TIC(%u) get_time(%u)\n", rounded_tic, MSEC_PER_TIC, get_time());
 	auto diff = get_time_to_next_tic_ms(current_time_ms);
 	//printf("rounded_tic(%u) current(%u) usleep(%u)\n", rounded_tic, current, diff);
-	DEBUG_VAR("%u\n", diff);
+	DEBUG_VAR("%llu\n", diff);
 	if (!tic_res)
 		Glib::signal_timeout().connect_once(sigc::mem_fun(*this, &Game::game_timer_cb), diff);
 };

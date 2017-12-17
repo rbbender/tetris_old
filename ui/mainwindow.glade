@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.2 -->
+<!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkImage" id="gtkNewGameImage">
@@ -10,8 +10,7 @@
   <object class="GtkApplicationWindow" id="gtkMainWindow">
     <property name="height_request">440</property>
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Test window</property>
-    <property name="hide_titlebar_when_maximized">True</property>
+    <property name="show_menubar">False</property>
     <child>
       <object class="GtkBox" id="gtkParentVbox">
         <property name="visible">True</property>
@@ -36,10 +35,9 @@
                         <property name="label">New Game</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="action_name">menufilenewgame</property>
+                        <property name="action_name">win.newgame</property>
                         <property name="image">gtkNewGameImage</property>
                         <property name="use_stock">False</property>
-                        <signal name="activate" handler="handle_gtkMainMenuFile_NewGame_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
@@ -47,7 +45,7 @@
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="action_name">menufilequit</property>
+                        <property name="action_name">win.quit</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -60,7 +58,7 @@
               <object class="GtkMenuItem" id="gtkMainMenuHelp">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="action_name">menuhelp</property>
+                <property name="action_name">win.help</property>
                 <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
               </object>

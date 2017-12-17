@@ -13,7 +13,7 @@
 
 class GTKTetrisMainWindow: public Gtk::ApplicationWindow {
 public:
-	GTKTetrisMainWindow(const Glib::RefPtr<Gtk::Builder>& bld);
+	GTKTetrisMainWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& bld);
 	~GTKTetrisMainWindow();
 
 protected:
