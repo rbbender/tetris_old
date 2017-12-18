@@ -13,17 +13,17 @@
 #include <sstream>
 #include <controls.h>
 
-class field_t;
+class TetrisField;
 
 class Renderer {
 protected:
-	field_t* pField;
+	TetrisField* pField;
     unsigned short szFldBlkX, szFldBlkY; // field size in blocks
     const unsigned short FLD_VIS_Y;
 public:
 	Renderer();
 	virtual int process_input() = 0;
-	virtual int init(field_t*) = 0;
+	virtual int init(TetrisField*) = 0;
 	virtual int render(double) = 0;
 	virtual ~Renderer();
 };

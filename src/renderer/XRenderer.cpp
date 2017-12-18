@@ -6,7 +6,7 @@
  */
 
 #include <renderer/XRenderer.h>
-#include <field.h>
+#include <TetrisField.h>
 
 static char const* visual_class[] = {
    "StaticGray",
@@ -76,7 +76,7 @@ XRenderer::XRenderer():
 	szPrevOffset(0), szCurOffset(0)
 {}
 
-int XRenderer::init(field_t* pFld) {
+int XRenderer::init(TetrisField* pFld) {
 	pField = pFld;
 	pDsp = XOpenDisplay(NULL);
     if (colors_fill(pDsp, DefaultScreen(pDsp)) < 0) {
@@ -211,7 +211,7 @@ int XRenderer::redraw_full() {
             }
         }
     }
-    figure_position_t* next_position = pField->get_next_figure();
+    TetrisFigurePosition* next_position = pField->get_next_figure();
     ENUM_COLORS next_color = pField->get_next_color();
     for (int y=0; y<next_position->size_y; ++y)
         for (int x=0; x<next_position->size_x; ++x)

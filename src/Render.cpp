@@ -5,7 +5,7 @@
  *      Author: rbbender
  */
 #include <renderer/Renderer.h>
-#include <field.h>
+#include <TetrisField.h>
 
 Renderer::Renderer():
 	pField(nullptr),

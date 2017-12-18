@@ -7,7 +7,8 @@ typedef enum {
     FIG_R,
     FIG_BACK_R,
     FIG_STICK,
-    FIG_T
+    FIG_T,
+	FIG_COUNT
 } ENUM_FIGURES;
 
 typedef struct {
@@ -15,17 +16,18 @@ typedef struct {
     char y;
 } FLD_POINT;
 
-struct figure_position_t {
+struct TetrisFigurePosition {
     char size_x;
     char size_y;
     ENUM_FIGURES figure_type;
     char layout[4][4];
-    struct figure_position_t* prev_pos;
-    struct figure_position_t* next_pos;
+    struct TetrisFigurePosition* prev_pos;
+    struct TetrisFigurePosition* next_pos;
     char cnt_upper_points;
     char cnt_lower_points;
     FLD_POINT upper_points[4];
     FLD_POINT lower_points[4];
+    short rel_start_y;
     int render();
 };
 

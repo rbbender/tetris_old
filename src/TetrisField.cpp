@@ -1,18 +1,14 @@
+#include <TetrisField.h>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <cassert>
-#include <field.h>
 
 extern const char FIG_POS_COUNTS[];
-extern figure_position_t* FIG_POSITIONS[]; 
-
-unsigned long long field_t::get_points() {
-    return points;
-}
+extern TetrisFigurePosition* FIG_POSITIONS[]; 
 
 
-field_t::field_t() {
+TetrisField::TetrisField() {
     DEBUG_TRACE;
     DEBUG_VAR("%d", SZ_Y);
     printf("%d\n", SZ_Y);
@@ -20,10 +16,10 @@ field_t::field_t() {
             for (int k = 0; k < SZ_X; ++k) 
                 fld[i][k] = BLACK;
 
-    figure_position_t* n = next_figure();
+    TetrisFigurePosition* n = next_figure();
     prev_y = get_figure_start_position_y(n);
     cur_color = next_color;
-    current_figure = new figure_t(n->figure_type, n, prev_y);
+    current_figure = new TetrisFigure(n->figure_type, n, prev_y);
     prev_x = 4;
     prev_position = current_figure->current_pos;
     next_position = next_figure();
@@ -34,7 +30,7 @@ field_t::field_t() {
     DEBUG_TRACE;
 }
 
-int field_t::remove_previous() {
+int TetrisField::remove_previous() {
     DEBUG_TRACE;
     for (int i = 0; i < prev_position->size_y; ++i)
         for (int k = 0; k < prev_position->size_x; ++k){
@@ -46,22 +42,22 @@ int field_t::remove_previous() {
     return 0;
 }
 
-int field_t::get_figure_start_position_y(figure_position_t* pos) {
+int TetrisField::get_figure_start_position_y(TetrisFigurePosition* pos) {
     return VIS_Y - pos->size_y + 1;
 }
 
-void field_t::exit() {
+void TetrisField::exit() {
     set_exit_flag();
 }
 
-void field_t::force_landing() {
+void TetrisField::force_landing() {
     remove_previous();
     while(!is_figure_landed())
         ++(current_figure->pos_y);
     recompose();
 }
 
-int field_t::recompose() {
+int TetrisField::recompose() {
     DEBUG_TRACE;
     if (!is_figure_landed()) {
     	set_prev_remove();
@@ -80,7 +76,7 @@ int field_t::recompose() {
 }
 
 
-ENUM_TIC_RESULT field_t::tic(double tic_ratio) {
+ENUM_TIC_RESULT TetrisField::tic(double tic_ratio) {
     DEBUG_TRACE;
     ENUM_TIC_RESULT result = TIC_RESULT_PLAY_ANIMATION;
     if (to_exit)
@@ -93,7 +89,7 @@ ENUM_TIC_RESULT field_t::tic(double tic_ratio) {
         if (is_game_ended())
             return TIC_RESULT_GAME_OVER;
         prev_y = get_figure_start_position_y(prev_position);
-        current_figure = new figure_t(next_position->figure_type, next_position, prev_y);
+        current_figure = new TetrisFigure(next_position->figure_type, next_position, prev_y);
         cur_color = next_color;
         prev_position = next_position;
         prev_x = 4;
@@ -134,7 +130,7 @@ ENUM_TIC_RESULT field_t::tic(double tic_ratio) {
     return result;
 }
 
-int field_t::rotate_clockwise() {
+int TetrisField::rotate_clockwise() {
     remove_previous();
     if (is_rotation_possible(current_figure->current_pos->next_pos))
         current_figure->rotate_clockwise();
@@ -143,7 +139,7 @@ int field_t::rotate_clockwise() {
     return 0;
 };
 
-int field_t::rotate_counterclockwise() {
+int TetrisField::rotate_counterclockwise() {
     remove_previous();
     if (is_rotation_possible(current_figure->current_pos->prev_pos))
         current_figure->rotate_counterclockwise();
@@ -152,7 +148,7 @@ int field_t::rotate_counterclockwise() {
     return 0;
 };
 
-figure_position_t* field_t::next_figure() {
+TetrisFigurePosition* TetrisField::next_figure() {
     DEBUG_VAR("%d\n", NUM_FIGURES);
     int nxt_col = rand() % (NUM_COLORS - 1);
     next_color = static_cast<ENUM_COLORS> (nxt_col + 1);
@@ -162,7 +158,7 @@ figure_position_t* field_t::next_figure() {
     return &FIG_POSITIONS[n][pos];
 };
 
-bool field_t::is_figure_landed() {
+bool TetrisField::is_figure_landed() {
     DEBUG_TRACE;
     if (is_landed) {
         DEBUG_VAR("%d\n", is_landed);
@@ -189,7 +185,7 @@ bool field_t::is_figure_landed() {
     return false;
 }
 
-bool field_t::is_game_ended() {
+bool TetrisField::is_game_ended() {
     for (int i = 0; i < VIS_Y; ++i)
         for (int k = 0; k < SZ_X; ++k)
             if (fld[i][k] != BLACK)
@@ -197,7 +193,7 @@ bool field_t::is_game_ended() {
     return false;
 }
 
-int field_t::remove_line(int n_line) {
+int TetrisField::remove_line(int n_line) {
     for (int i = 0; i < SZ_X; ++i)
         fld[n_line][i] = BLACK;
     for (int i = n_line; i > VIS_Y; --i)
@@ -208,7 +204,7 @@ int field_t::remove_line(int n_line) {
     return 0;
 }
 
-int field_t::remove_full_lines() {
+int TetrisField::remove_full_lines() {
     //int p_x = current_figure->pos_x;
     int p_y = current_figure->pos_y;
     int cnt_lines = 0;
@@ -227,7 +223,7 @@ int field_t::remove_full_lines() {
     return cnt_lines;
 }
 
-bool field_t::is_rotation_possible(figure_position_t* candidate_pos) {
+bool TetrisField::is_rotation_possible(TetrisFigurePosition* candidate_pos) {
     int p_x = current_figure->pos_x;
     int p_y = current_figure->pos_y;
     // check x axis
@@ -241,7 +237,7 @@ bool field_t::is_rotation_possible(figure_position_t* candidate_pos) {
                 return false;
     return true;
 };
-bool field_t::is_move_left_possible() {
+bool TetrisField::is_move_left_possible() {
     DEBUG_TRACE;
     int p_x = current_figure->pos_x - 1;
     int p_y = current_figure->pos_y;
@@ -254,7 +250,7 @@ bool field_t::is_move_left_possible() {
     return true;
 };
 
-bool field_t::is_move_right_possible() {
+bool TetrisField::is_move_right_possible() {
     DEBUG_TRACE;
     int p_x = current_figure->pos_x + 1;
     int p_y = current_figure->pos_y;
@@ -267,7 +263,7 @@ bool field_t::is_move_right_possible() {
     return true;
 };
 
-int field_t::move_left() {
+int TetrisField::move_left() {
     DEBUG_TRACE;
     bool res;
     remove_previous();
@@ -281,7 +277,7 @@ int field_t::move_left() {
     return 0;
 }
 
-int field_t::move_right() {
+int TetrisField::move_right() {
     DEBUG_TRACE;
     bool res;
     remove_previous();
@@ -295,7 +291,7 @@ int field_t::move_right() {
     return 0;
 }
 
-void field_t::print() {
+void TetrisField::print() {
     printf("Score: %Lu\n", get_points());
     next_position->render();
     printf("\n");
@@ -307,17 +303,17 @@ void field_t::print() {
     printf("-------------\n");
 }
 
-int field_t::clear_deleted_rectangles() {
+int TetrisField::clear_deleted_rectangles() {
 	deleted_rectangles.clear();
 	return 0;
 }
 
-int field_t::clear_new_rectangles() {
+int TetrisField::clear_new_rectangles() {
 	new_rectangles.clear();
 	return 0;
 }
 
-int field_t::set_prev_remove() {
+int TetrisField::set_prev_remove() {
     for (int i=0; i < prev_position->size_y; ++i) {
         if (prev_y + i < VIS_Y)
             continue;
@@ -330,7 +326,7 @@ int field_t::set_prev_remove() {
 	return 0;
 }
 
-int field_t::set_cur_new() {
+int TetrisField::set_cur_new() {
 	for (int i=0; i < current_figure->current_pos->size_y; ++i) {
 		if (current_figure->pos_y + i < VIS_Y)
 			continue;
@@ -343,47 +339,47 @@ int field_t::set_cur_new() {
 	return 0;
 }
 
-int field_t::get_fld_pnt(int x, int y) {
+int TetrisField::get_fld_pnt(int x, int y) {
 	return fld[y][x];
 }
 
-std::deque<FieldAddr_t>& field_t::get_new_rectangles() {
+std::deque<FieldAddr_t>& TetrisField::get_new_rectangles() {
 	return new_rectangles;
 }
 
-std::deque<FieldAddr_t>& field_t::get_deleted_rectangles() {
+std::deque<FieldAddr_t>& TetrisField::get_deleted_rectangles() {
 	return deleted_rectangles;
 }
 
-void field_t::set_redraw_flag() {
+void TetrisField::set_redraw_flag() {
 	DEBUG_PRINT("set_redraw\n");
 	redraw_required = true;
 };
 
-void field_t::unset_redraw_flag() {
+void TetrisField::unset_redraw_flag() {
 	redraw_required = false;
 };
 
-void field_t::set_exit_flag() {
+void TetrisField::set_exit_flag() {
 	to_exit = true;
 };
 
-figure_position_t* field_t::get_next_figure() {
+TetrisFigurePosition* TetrisField::get_next_figure() {
 	return next_position;
 };
 
-ENUM_COLORS field_t::get_next_color() {
+ENUM_COLORS TetrisField::get_next_color() {
 	return next_color;
 };
 
-unsigned field_t::get_level() {
+unsigned TetrisField::get_level() {
 	return level;
 };
 
-ENUM_COLORS field_t::get_cur_color() {
+ENUM_COLORS TetrisField::get_cur_color() {
 	return cur_color;
 };
 
-bool field_t::is_redraw_required() {
+bool TetrisField::is_redraw_required() {
 	return redraw_required;
 };

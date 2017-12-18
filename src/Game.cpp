@@ -7,6 +7,9 @@
 
 #include <Game.h>
 
+extern const char FIG_POS_COUNTS[];
+extern TetrisFigurePosition* FIG_POSITIONS[];
+
 Game::Game(Renderer& render):
 	TICS_PER_SEC(25),
 	MSEC_PER_TIC(1000 / TICS_PER_SEC),
@@ -18,7 +21,8 @@ Game::Game(Renderer& render):
 	tics_per_turn(TICS_PER_SEC),
 	next_lvl(SCORE_PER_LVL),
 	tic_res(0),
-	score(0)
+	score(0),
+	next_color(WHITE)
 {
 	time_t seed = time(NULL);
     srand(seed);
@@ -80,7 +84,7 @@ void Game::game_timer_cb() {
 		Glib::signal_timeout().connect_once(sigc::mem_fun(*this, &Game::game_timer_cb), diff);
 };
 
-field_t* Game::get_field() {
+TetrisField* Game::get_field() {
 	return &gameField;
 }
 
@@ -104,3 +108,12 @@ unsigned long long Game::get_time_to_next_tic_ms(){
 unsigned long long Game::get_time_to_next_tic_ms(unsigned long long time_since_start_ms){
 	return (get_tic() + 1) * MSEC_PER_TIC - time_since_start_ms;
 }
+
+TetrisFigurePosition* Game::next_figure() {
+    DEBUG_VAR("%d\n", NUM_FIGURES);
+    int nxt_col = rand() % (NUM_COLORS - 1);
+    next_color = static_cast<ENUM_COLORS> (nxt_col + 1);
+    ENUM_FIGURES n = static_cast<ENUM_FIGURES> (rand() % static_cast<int>(FIG_COUNT));
+    int pos = rand() % FIG_POS_COUNTS[n];
+    return &FIG_POSITIONS[n][pos];
+};

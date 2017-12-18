@@ -9,9 +9,10 @@
 #define INCLUDE_GAME_H_
 
 #include <utility_func.h>
-#include <field.h>
 #include <renderer/Renderer.h>
+#include <colors.h>
 #include <glibmm/main.h>
+#include <TetrisField.h>
 
 typedef enum {
 	TIC_RESULT_PLAY_ANIMATION,
@@ -24,7 +25,7 @@ class Game {
 public:
 	Game(Renderer& render);
 	void game_timer_cb();
-	field_t* get_field();
+	TetrisField* get_field();
     ENUM_TIC_RESULT tic(double tick_ratio);
     unsigned get_score();
     bool is_game_ended();
@@ -35,9 +36,9 @@ public:
     ENUM_COLORS get_next_color();
     void increase_level();
     unsigned get_level();
-    figure_position_t* next_figure();
     void set_exit_flag();
     void exit();
+    int get_figure_start_position_y(TetrisFigurePosition* pos);
 
 	const int TICS_PER_SEC;
 	const int MSEC_PER_TIC;
@@ -51,8 +52,9 @@ protected:
 	unsigned long long get_tic(unsigned long long time_since_start_ms);
 	unsigned long long get_time_to_next_tic_ms();
 	unsigned long long get_time_to_next_tic_ms(unsigned long long time_since_start_ms);
+    TetrisFigurePosition* next_figure();
 
-	field_t gameField;
+	TetrisField gameField;
 	Renderer& rRender;
 	unsigned long long game_start_time_ms;
 	unsigned long long prev_turn_time_ms;
@@ -63,7 +65,7 @@ protected:
 	unsigned int next_lvl;
 	int tic_res;
 	unsigned score;
-    ENUM_COLORS cur_color, next_color;
+    ENUM_COLORS next_color;
 };
 
 
