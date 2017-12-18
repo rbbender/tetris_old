@@ -16,11 +16,6 @@ GTKTetrisMainWindow::GTKTetrisMainWindow(BaseObjectType* cobject, const Glib::Re
 	add_action("newgame", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_new_game));
 	add_action("quit", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_quit));
 	add_action("help", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_help));
-	auto vec_actions = list_actions();
-	//set_show_menubar(true);
-	show_all();
-
-
 }
 
 GTKTetrisMainWindow::~GTKTetrisMainWindow() {};

@@ -17,7 +17,8 @@ Game::Game(Renderer& render):
 	prev_turn_time_ms(0),
 	tics_per_turn(TICS_PER_SEC),
 	next_lvl(SCORE_PER_LVL),
-	tic_res(0)
+	tic_res(0),
+	score(0)
 {
 	time_t seed = time(NULL);
     srand(seed);

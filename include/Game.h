@@ -8,15 +8,36 @@
 #ifndef INCLUDE_GAME_H_
 #define INCLUDE_GAME_H_
 
+#include <utility_func.h>
 #include <field.h>
 #include <renderer/Renderer.h>
 #include <glibmm/main.h>
+
+typedef enum {
+	TIC_RESULT_PLAY_ANIMATION,
+	TIC_RESULT_TURN,
+	TIC_RESULT_FIGURE_LANDED,
+	TIC_RESULT_GAME_OVER
+} ENUM_TIC_RESULT;
 
 class Game {
 public:
 	Game(Renderer& render);
 	void game_timer_cb();
 	field_t* get_field();
+    ENUM_TIC_RESULT tic(double tick_ratio);
+    unsigned get_score();
+    bool is_game_ended();
+    bool is_redraw_required();
+    void set_redraw_flag();
+    void unset_redraw_flag();
+    ENUM_COLORS get_cur_color();
+    ENUM_COLORS get_next_color();
+    void increase_level();
+    unsigned get_level();
+    figure_position_t* next_figure();
+    void set_exit_flag();
+    void exit();
 
 	const int TICS_PER_SEC;
 	const int MSEC_PER_TIC;
@@ -41,6 +62,8 @@ protected:
 
 	unsigned int next_lvl;
 	int tic_res;
+	unsigned score;
+    ENUM_COLORS cur_color, next_color;
 };
 
 
