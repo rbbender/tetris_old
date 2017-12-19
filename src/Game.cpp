@@ -24,7 +24,8 @@ Game::Game(Renderer& render):
 	tic_res(0),
 	score(0),
 	next_color(WHITE),
-	to_exit(false)
+	to_exit(false),
+	to_redraw(true)
 {
 	time_t seed = time(NULL);
     srand(seed);
@@ -121,7 +122,7 @@ std::unique_ptr<TetrisFigure> Game::next_figure() {
     next_color = static_cast<ENUM_COLORS> (nxt_col + 1);
     ENUM_FIGURES n = static_cast<ENUM_FIGURES> (rand() % static_cast<int>(FIG_COUNT));
     int pos = rand() % FIG_POS_COUNTS[n];
-    return std::make_unique<TetrisFigure>(n, &FIG_POSITIONS[n][pos], nxt_col);
+    return std::make_unique<TetrisFigure>(new TetrisFigure(n, &FIG_POSITIONS[n][pos], nxt_col));
 };
 
 unsigned Game::get_score() {
@@ -155,8 +156,8 @@ ENUM_TIC_RESULT Game::tic(double tic_ratio) {
 //        		if (current_figure->pos_y + i >= VIS_Y && current_figure->current_pos->layout[i][k])
 //        			x_set_rectangle_white(current_figure->pos_x + k, current_figure->pos_y + i);
 #ifdef DEBUG
-        DEBUG_VAR("%lu\n", new_rectangles.size());
-        DEBUG_VAR("%lu\n", deleted_rectangles.size());
+        DEBUG_VAR("%lu\n", gameField.get_new_rectangles().size());
+        DEBUG_VAR("%lu\n", gameField.get_deleted_rectangles().size());
         DEBUG_VAR("%d\n", prev_x);
         DEBUG_VAR("%d\n", prev_y);
         DEBUG_VAR("%d\n", current_figure->pos_x);

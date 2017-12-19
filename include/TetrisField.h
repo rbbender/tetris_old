@@ -45,9 +45,12 @@ public:
     int get_field_size_y() {return SZ_Y;};
     short get_vis_y() {return VIS_Y;};
     std::unique_ptr<TetrisFigure> get_current_figure();
-    TetrisFigurePosition* get_next_figure();
     std::deque<FieldAddr_t>& get_new_rectangles();
     std::deque<FieldAddr_t>& get_deleted_rectangles();
+    short get_cur_x();
+    short get_cur_y();
+    short get_prev_x();
+    short get_prev_y();
     // updated squares operations (for delta redraw)
     int set_prev_remove();
     int set_cur_new();

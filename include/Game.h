@@ -38,7 +38,6 @@ public:
     unsigned get_level();
     void set_exit_flag();
     void exit();
-    int get_figure_start_position_y(TetrisFigurePosition* pos);
 
     int process_move_left();
     int process_move_right();
@@ -75,6 +74,7 @@ protected:
 	unsigned score;
     ENUM_COLORS next_color;
     bool to_exit;
+    bool to_redraw;
     std::unique_ptr<TetrisFigure> p_next_figure;
 };
 

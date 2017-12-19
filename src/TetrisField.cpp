@@ -4,9 +4,6 @@
 #include <cstring>
 #include <cassert>
 
-extern const char FIG_POS_COUNTS[];
-extern TetrisFigurePosition* FIG_POSITIONS[]; 
-
 
 TetrisField::TetrisField() {
     DEBUG_TRACE;
@@ -19,10 +16,10 @@ TetrisField::TetrisField() {
 
 int TetrisField::remove_previous() {
     DEBUG_TRACE;
-    for (int i = 0; i < prev_position->size_y; ++i)
-        for (int k = 0; k < prev_position->size_x; ++k){
-            if (prev_position->layout[i][k] == 1) {
-                fld[prev_y + i][prev_x + k] = BLACK;
+    for (int i = 0; i < prev_figure->current_pos->size_y; ++i)
+        for (int k = 0; k < prev_figure->current_pos->size_x; ++k){
+            if (prev_figure->current_pos->layout[i][k] == 1) {
+                fld[prev_figure->pos_y + i][prev_figure->pos_x + k] = BLACK;
             }
         }
     DEBUG_TRACE;
@@ -76,10 +73,6 @@ int TetrisField::rotate_counterclockwise() {
 
 bool TetrisField::is_figure_landed() {
     DEBUG_TRACE;
-    if (is_landed) {
-        DEBUG_VAR("%d\n", is_landed);
-        return true;
-    }
     int p_x = current_figure->pos_x;
     int p_y = current_figure->pos_y;
     if (p_y + current_figure->current_pos->size_y + 1 > SZ_Y) {
@@ -92,12 +85,10 @@ bool TetrisField::is_figure_landed() {
     	char y = current_figure->current_pos->lower_points[i].y;
     	if (fld[p_y + y + 1][p_x + x] != BLACK) {
     		DEBUG_PRINT("is_figure_landed:2:true\n");
-            is_landed = true;
     		return true;
     	}
     }
 	DEBUG_PRINT("is_figure_landed:false\n");
-    is_landed = false;
     return false;
 }
 
@@ -187,7 +178,6 @@ int TetrisField::move_left() {
         current_figure->pos_x -= 1;
         recompose();
         new_rectangles.clear();
-        is_landed = false;
     }
     DEBUG_VAR("%d\n", res);
     return 0;
@@ -201,7 +191,6 @@ int TetrisField::move_right() {
         current_figure->pos_x += 1;
         recompose();
         new_rectangles.clear();
-        is_landed = false;
     }
     DEBUG_VAR("%d\n", res);
     return 0;
@@ -230,12 +219,12 @@ int TetrisField::clear_new_rectangles() {
 }
 
 int TetrisField::set_prev_remove() {
-    for (int i=0; i < prev_position->size_y; ++i) {
-        if (prev_y + i < VIS_Y)
+    for (int i=0; i < prev_figure->current_pos->size_y; ++i) {
+        if (prev_figure->current_pos->pos_y + i < VIS_Y)
             continue;
-        for (int k=0; k < prev_position->size_x; ++k) {
-            if (prev_position->layout[i][k] == 1) {
-                deleted_rectangles.emplace_back(prev_y + i - VIS_Y, prev_x + k);
+        for (int k=0; k < prev_figure->current_pos->size_x; ++k) {
+            if (prev_figure->current_pos->layout[i][k] == 1) {
+                deleted_rectangles.emplace_back(prev_figure->current_pos->pos_y + i - VIS_Y, prev_figure->current_pos->pos_x + k);
             }
         }
     }
@@ -305,6 +294,19 @@ std::unique_ptr<TetrisFigure> TetrisField::get_current_figure() {
 }
 
 void TetrisField::set_current_figure(std::unique_ptr<TetrisFigure> p_new_cur) {
+	auto figure_to_delete = current_figure;
 	current_figure = p_new_cur;
 	is_figure_landed();
+}
+
+short TetrisField::get_cur_x() {
+	return (*current_figure).pos_x;
+}
+
+short TetrisField::get_cur_y() {
+	return (*current_figure).pos_y;
+}
+
+short TetrisField::get_prev_x() {
+	return (*prev_figure).pos_x;
 }
