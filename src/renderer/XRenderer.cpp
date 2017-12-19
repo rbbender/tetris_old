@@ -76,8 +76,8 @@ XRenderer::XRenderer():
 	szPrevOffset(0), szCurOffset(0)
 {}
 
-int XRenderer::init(TetrisField* pFld) {
-	pField = pFld;
+int XRenderer::init(Game* pGm) {
+	pGame = pGm;
 	pDsp = XOpenDisplay(NULL);
     if (colors_fill(pDsp, DefaultScreen(pDsp)) < 0) {
         printf("ERROR: unable to initialize colors, exiting...");

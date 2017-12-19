@@ -44,7 +44,7 @@ class XRenderer: public Renderer {
 public:
     XRenderer();
     ~XRenderer();
-	int init(TetrisField* field);
+	int init(Game* field);
 	int process_input();
 	int render(double ratio);
 };

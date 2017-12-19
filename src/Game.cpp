@@ -20,15 +20,21 @@ Game::Game(Renderer& render):
 	prev_turn_time_ms(0),
 	tics_per_turn(TICS_PER_SEC),
 	next_lvl(SCORE_PER_LVL),
+	current_lvl(1),
 	tic_res(0),
 	score(0),
-	next_color(WHITE)
+	next_color(WHITE),
+	to_exit(false)
 {
 	time_t seed = time(NULL);
     srand(seed);
     printf("Initialized game with seed = %ld\n", seed);
     printf("MSEC_PER_TIC = %u\n", MSEC_PER_TIC);
-    render.init(get_field());
+    render.init(this);
+
+    auto cur_figure = next_figure();
+    gameField.set_current_figure(cur_figure);
+    p_next_figure = next_figure();
 }
 
 int Game::update_state(unsigned long long current_tics, double tic_ratio) {
@@ -37,13 +43,13 @@ int Game::update_state(unsigned long long current_tics, double tic_ratio) {
     int result = 0;
     DEBUG_VAR("%llu\n", current_tics);
 
-	tic_result = gameField.tic(tic_ratio);
+	tic_result = tic(tic_ratio);
 
 	switch (tic_result) {
 	case TIC_RESULT_FIGURE_LANDED:
-		if (gameField.get_points() >= next_lvl) {
+		if (get_score() >= next_lvl) {
 			next_lvl += SCORE_PER_LVL;
-			gameField.increase_level();
+			increase_level();
 			if (tics_per_turn > 2)
 				tics_per_turn -= 2;
 		};
@@ -109,11 +115,71 @@ unsigned long long Game::get_time_to_next_tic_ms(unsigned long long time_since_s
 	return (get_tic() + 1) * MSEC_PER_TIC - time_since_start_ms;
 }
 
-TetrisFigurePosition* Game::next_figure() {
+std::unique_ptr<TetrisFigure> Game::next_figure() {
     DEBUG_VAR("%d\n", NUM_FIGURES);
     int nxt_col = rand() % (NUM_COLORS - 1);
     next_color = static_cast<ENUM_COLORS> (nxt_col + 1);
     ENUM_FIGURES n = static_cast<ENUM_FIGURES> (rand() % static_cast<int>(FIG_COUNT));
     int pos = rand() % FIG_POS_COUNTS[n];
-    return &FIG_POSITIONS[n][pos];
+    return std::make_unique<TetrisFigure>(n, &FIG_POSITIONS[n][pos], nxt_col);
 };
+
+unsigned Game::get_score() {
+	return score;
+}
+
+void Game::increase_level() {
+	++current_lvl;
+	next_lvl += SCORE_PER_LVL;
+}
+
+ENUM_TIC_RESULT Game::tic(double tic_ratio) {
+    DEBUG_TRACE;
+    ENUM_TIC_RESULT result = TIC_RESULT_PLAY_ANIMATION;
+    if (to_exit)
+        return TIC_RESULT_GAME_OVER;
+    if (gameField.is_figure_landed()) {
+        gameField.recompose();
+        score += gameField.remove_full_lines();
+        {
+        	auto cur_fig = gameField.get_current_figure();
+        }
+        if (is_game_ended())
+            return TIC_RESULT_GAME_OVER;
+        gameField.set_current_figure(p_next_figure);
+        p_next_figure = next_figure();
+        gameField.recompose();
+        set_redraw_flag();
+//        for (int i=0; i < current_figure->current_pos->size_y; ++i)
+//        	for (int k=0; k < current_figure->current_pos->size_x; ++k)
+//        		if (current_figure->pos_y + i >= VIS_Y && current_figure->current_pos->layout[i][k])
+//        			x_set_rectangle_white(current_figure->pos_x + k, current_figure->pos_y + i);
+#ifdef DEBUG
+        DEBUG_VAR("%lu\n", new_rectangles.size());
+        DEBUG_VAR("%lu\n", deleted_rectangles.size());
+        DEBUG_VAR("%d\n", prev_x);
+        DEBUG_VAR("%d\n", prev_y);
+        DEBUG_VAR("%d\n", current_figure->pos_x);
+        DEBUG_VAR("%d\n", current_figure->pos_y);
+#endif
+        result = TIC_RESULT_FIGURE_LANDED;
+    }
+    else {
+		if (tic_ratio >= 1.0) {
+			remove_previous();
+			current_figure->pos_y += 1;
+			recompose();
+			result = TIC_RESULT_TURN;
+		}
+		else {
+			recompose();
+			result = TIC_RESULT_PLAY_ANIMATION;
+		}
+    }
+#ifdef DEBUG
+	print();
+#endif
+    DEBUG_TRACE;
+    return result;
+}
+

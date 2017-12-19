@@ -15,19 +15,6 @@ TetrisField::TetrisField() {
     for (int i = 0; i < SZ_Y; ++i) 
             for (int k = 0; k < SZ_X; ++k) 
                 fld[i][k] = BLACK;
-
-    TetrisFigurePosition* n = next_figure();
-    prev_y = get_figure_start_position_y(n);
-    cur_color = next_color;
-    current_figure = new TetrisFigure(n->figure_type, n, prev_y);
-    prev_x = 4;
-    prev_position = current_figure->current_pos;
-    next_position = next_figure();
-    recompose();
-	set_redraw_flag();
-	level = 1;
-    cur_offset = 0;
-    DEBUG_TRACE;
 }
 
 int TetrisField::remove_previous() {
@@ -42,13 +29,6 @@ int TetrisField::remove_previous() {
     return 0;
 }
 
-int TetrisField::get_figure_start_position_y(TetrisFigurePosition* pos) {
-    return VIS_Y - pos->size_y + 1;
-}
-
-void TetrisField::exit() {
-    set_exit_flag();
-}
 
 void TetrisField::force_landing() {
     remove_previous();
@@ -66,69 +46,15 @@ int TetrisField::recompose() {
     for (int i = 0; i < current_figure->current_pos->size_y; ++i)
         for (int k = 0; k < current_figure->current_pos->size_x; ++k)
             if (current_figure->current_pos->layout[i][k] == 1) {
-                fld[current_figure->pos_y + i][current_figure->pos_x + k] = cur_color;
+                fld[current_figure->pos_y + i][current_figure->pos_x + k] = current_figure->color;
             }
-    prev_y = current_figure->pos_y;
-    prev_x = current_figure->pos_x;
-    prev_position = current_figure->current_pos;
+    prev_figure->current_pos = current_figure->current_pos;
+    prev_figure->pos_y = current_figure->pos_y;
+    prev_figure->pos_x = current_figure->pos_x;
     DEBUG_TRACE;
     return 0;
 }
 
-
-ENUM_TIC_RESULT TetrisField::tic(double tic_ratio) {
-    DEBUG_TRACE;
-    ENUM_TIC_RESULT result = TIC_RESULT_PLAY_ANIMATION;
-    if (to_exit)
-        return TIC_RESULT_GAME_OVER;
-    cur_offset = 0;
-    if (is_figure_landed()) {
-        recompose();
-        points += remove_full_lines();
-        delete current_figure;
-        if (is_game_ended())
-            return TIC_RESULT_GAME_OVER;
-        prev_y = get_figure_start_position_y(prev_position);
-        current_figure = new TetrisFigure(next_position->figure_type, next_position, prev_y);
-        cur_color = next_color;
-        prev_position = next_position;
-        prev_x = 4;
-        next_position = next_figure();
-        recompose();
-        set_redraw_flag();
-        is_landed = false;
-//        for (int i=0; i < current_figure->current_pos->size_y; ++i)
-//        	for (int k=0; k < current_figure->current_pos->size_x; ++k)
-//        		if (current_figure->pos_y + i >= VIS_Y && current_figure->current_pos->layout[i][k])
-//        			x_set_rectangle_white(current_figure->pos_x + k, current_figure->pos_y + i);
-#ifdef DEBUG
-        DEBUG_VAR("%lu\n", new_rectangles.size());
-        DEBUG_VAR("%lu\n", deleted_rectangles.size());
-        DEBUG_VAR("%d\n", prev_x);
-        DEBUG_VAR("%d\n", prev_y);
-        DEBUG_VAR("%d\n", current_figure->pos_x);
-        DEBUG_VAR("%d\n", current_figure->pos_y);
-#endif
-        result = TIC_RESULT_FIGURE_LANDED;
-    }
-    else {
-		if (tic_ratio >= 1.0) {
-			remove_previous();
-			current_figure->pos_y += 1;
-			recompose();
-			result = TIC_RESULT_TURN;
-		}
-		else {
-			recompose();
-			result = TIC_RESULT_PLAY_ANIMATION;
-		}
-    }
-#ifdef DEBUG
-	print();
-#endif
-    DEBUG_TRACE;
-    return result;
-}
 
 int TetrisField::rotate_clockwise() {
     remove_previous();
@@ -146,16 +72,6 @@ int TetrisField::rotate_counterclockwise() {
     recompose();
     new_rectangles.clear();
     return 0;
-};
-
-TetrisFigurePosition* TetrisField::next_figure() {
-    DEBUG_VAR("%d\n", NUM_FIGURES);
-    int nxt_col = rand() % (NUM_COLORS - 1);
-    next_color = static_cast<ENUM_COLORS> (nxt_col + 1);
-    assert(next_color != BLACK);
-    ENUM_FIGURES n = static_cast<ENUM_FIGURES> (rand() % static_cast<int>(NUM_FIGURES));
-    int pos = rand() % FIG_POS_COUNTS[n];
-    return &FIG_POSITIONS[n][pos];
 };
 
 bool TetrisField::is_figure_landed() {
@@ -383,3 +299,12 @@ ENUM_COLORS TetrisField::get_cur_color() {
 bool TetrisField::is_redraw_required() {
 	return redraw_required;
 };
+
+std::unique_ptr<TetrisFigure> TetrisField::get_current_figure() {
+	return current_figure;
+}
+
+void TetrisField::set_current_figure(std::unique_ptr<TetrisFigure> p_new_cur) {
+	current_figure = p_new_cur;
+	is_figure_landed();
+}

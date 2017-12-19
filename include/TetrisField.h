@@ -1,6 +1,7 @@
 #include <TetrisFigure.h>
 #include <deque>
 #include <utility>
+#include <memory>
 
 typedef std::pair<unsigned short, unsigned short> FieldAddr_t;
 
@@ -13,14 +14,8 @@ class TetrisField {
     const short VIS_Y = 3;
 
     char fld[SZ_Y][SZ_X];
-    TetrisFigure* current_figure;
-    TetrisFigurePosition* prev_position;
-    int prev_y;
-    int prev_x;
-    bool redraw_required = true;
-    bool to_exit = false;
-    bool is_landed = false;
-    ENUM_COLORS cur_color;
+    std::unique_ptr<TetrisFigure> current_figure;
+    std::unique_ptr<TetrisFigure> prev_figure;
 
     std::deque<FieldAddr_t> new_rectangles, deleted_rectangles;
 
@@ -44,11 +39,12 @@ public:
     int recompose();
     int remove_line(int n_line);
     int remove_full_lines();
-    void set_current_figure(TetrisFigurePosition* pos, ENUM_COLORS color);
+    void set_current_figure(std::unique_ptr<TetrisFigure> pos);
     // access methods
     int get_field_size_x() {return SZ_X;};
     int get_field_size_y() {return SZ_Y;};
     short get_vis_y() {return VIS_Y;};
+    std::unique_ptr<TetrisFigure> get_current_figure();
     TetrisFigurePosition* get_next_figure();
     std::deque<FieldAddr_t>& get_new_rectangles();
     std::deque<FieldAddr_t>& get_deleted_rectangles();

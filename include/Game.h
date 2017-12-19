@@ -40,6 +40,13 @@ public:
     void exit();
     int get_figure_start_position_y(TetrisFigurePosition* pos);
 
+    int process_move_left();
+    int process_move_right();
+    int process_rotate_clockwise();
+    int process_rotate_counterclockwise();
+    int process_force_landing();
+    int process_quit();
+
 	const int TICS_PER_SEC;
 	const int MSEC_PER_TIC;
 	const int SCORE_PER_LVL;
@@ -52,7 +59,7 @@ protected:
 	unsigned long long get_tic(unsigned long long time_since_start_ms);
 	unsigned long long get_time_to_next_tic_ms();
 	unsigned long long get_time_to_next_tic_ms(unsigned long long time_since_start_ms);
-    TetrisFigurePosition* next_figure();
+    std::unique_ptr<TetrisFigure> next_figure();
 
 	TetrisField gameField;
 	Renderer& rRender;
@@ -62,10 +69,13 @@ protected:
 										// means less tics per turn (milliseconds per tic is constant)
 										// initially one turn will take 1 second. Less tpt - less time being consumed by turn
 
-	unsigned int next_lvl;
+	unsigned next_lvl;
+	unsigned current_lvl;
 	int tic_res;
 	unsigned score;
     ENUM_COLORS next_color;
+    bool to_exit;
+    std::unique_ptr<TetrisFigure> p_next_figure;
 };
 
 

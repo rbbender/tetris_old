@@ -1,11 +1,13 @@
 #include <TetrisFigure.h>
 #include <cstdio>
 
-TetrisFigure::TetrisFigure(ENUM_FIGURES type, TetrisFigurePosition* pos, short p_y):
+TetrisFigure::TetrisFigure(ENUM_FIGURES type, TetrisFigurePosition* pos, ENUM_COLORS col):
+        current_pos(pos),
         pos_x(4),
-        pos_y(p_y),
-        type(type),
-        current_pos(pos){
+        pos_y(pos->rel_start_y),
+		color(col),
+        type(type)
+{
 }
 
 int TetrisFigure::rotate_clockwise() {
