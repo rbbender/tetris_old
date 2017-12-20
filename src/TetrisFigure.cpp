@@ -28,3 +28,12 @@ int TetrisFigure::render() {
     }
     return 0;
 } 
+
+int TetrisFigure::copy(TetrisFigure* src) {
+	current_pos = src->current_pos;
+	pos_x = src->pos_x;
+	pos_y = src->pos_y;
+	color = src->color;
+	type = src->type;
+	return 0;
+}

@@ -9,7 +9,8 @@
 #define INCLUDE_GTK_GTKTETRISMAINWINDOW_H_
 #include <gtkmm/applicationwindow.h>
 #include <gtkmm/builder.h>
-#include <TetrisField.h>
+#include <Game.h>
+#include <renderer/GtkRenderer.h>
 
 class GTKTetrisMainWindow: public Gtk::ApplicationWindow {
 public:
@@ -26,7 +27,9 @@ protected:
 	void on_menu_help();
 
 	const Glib::RefPtr<Gtk::Builder>& gtkBuilder;
-	TetrisField* pField;
+	Game* pGame;
+	GtkRenderer renderer;
+
 
 };
 

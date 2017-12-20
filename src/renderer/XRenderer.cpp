@@ -6,17 +6,18 @@
  */
 
 #include <renderer/XRenderer.h>
+#include <Game.h>
 #include <TetrisField.h>
 
-static char const* visual_class[] = {
-   "StaticGray",
-   "GrayScale",
-   "StaticColor",
-   "PseudoColor",
-   "TrueColor",
-   "DirectColor"
-};
-
+//static char const* visual_class[] = {
+//   "StaticGray",
+//   "GrayScale",
+//   "StaticColor",
+//   "PseudoColor",
+//   "TrueColor",
+//   "DirectColor"
+//};
+//
 int colors_fill(Display* disp, int screen_num) {
     int default_depth;
     Visual* default_visual;
@@ -77,7 +78,7 @@ XRenderer::XRenderer():
 {}
 
 int XRenderer::init(Game* pGm) {
-	pGame = pGm;
+	Renderer::init(pGm);
 	pDsp = XOpenDisplay(NULL);
     if (colors_fill(pDsp, DefaultScreen(pDsp)) < 0) {
         printf("ERROR: unable to initialize colors, exiting...");
@@ -115,22 +116,22 @@ int XRenderer::process_input() {
         c = buf[0];
         switch (c) {
             case KEY_FLD_LEFT:
-                pField->move_left();
+                pGame->process_move_left();
                 break;
             case KEY_FLD_RIGHT:
-                pField->move_right();
+                pGame->process_move_right();
                 break;
             case KEY_FLD_ROTATE:
-                pField->rotate_clockwise();
+                pGame->process_rotate_clockwise();
                 break;
             case KEY_FLD_ROTATE_COUNTER:
-                pField->rotate_counterclockwise();
+                pGame->process_rotate_counterclockwise();
                 break;
             case KEY_FLD_EXIT:
-                pField->exit();
+                pGame->process_quit();
                 break;
             case KEY_FLD_FORCE:
-                pField->force_landing();
+                pGame->process_force_landing();
                 break;
         }
     }
@@ -140,7 +141,7 @@ int XRenderer::process_input() {
 int XRenderer::render(double ratio) {
 	if (ratio >= 1.0)
 		ratio = 0.0;
-	if (pField->is_redraw_required()) {
+	if (pGame->is_redraw_required()) {
 		szPrevOffset = 0.0;
 		return redraw_full();
 	}
@@ -199,6 +200,7 @@ int XRenderer::draw_empty_field() {
 
 int XRenderer::redraw_full() {
     draw_empty_field();
+    auto pField = pGame->get_field();
     int t_fld_x = posWndX + SZ_BLOCK_PX;
     int t_fld_y = posWndY + SZ_BLOCK_PX;
     // Draw field
@@ -211,26 +213,26 @@ int XRenderer::redraw_full() {
             }
         }
     }
-    TetrisFigurePosition* next_position = pField->get_next_figure();
-    ENUM_COLORS next_color = pField->get_next_color();
+    auto next_position = pGame->get_next_position();
+    ENUM_COLORS next_color = pGame->get_next_color();
     for (int y=0; y<next_position->size_y; ++y)
         for (int x=0; x<next_position->size_x; ++x)
             if (next_position->layout[y][x] == 1)
                 XFillRectangle(pDsp, wnd, get_gc_for_color(next_color), posNextX + SZ_BLOCK_PX * x,
                     posNextY + SZ_BLOCK_PX * y, SZ_BLOCK_PX, SZ_BLOCK_PX);
     std::stringstream oStr;
-    oStr<< "Score: " << pField->get_points();
+    oStr<< "Score: " << pGame->get_score();
     const char* pOStr = oStr.str().c_str();
     size_t szOStr = oStr.str().length();
     XDrawString(pDsp, wnd, get_gc_for_color(WHITE), posScoreX, posScoreY + pFontStruct->ascent, pOStr, szOStr);
     oStr.str("");
     oStr.clear();
-    oStr << "Level: " << pField->get_level();
+    oStr << "Level: " << pGame->get_level();
     pOStr = oStr.str().c_str();
     szOStr = oStr.str().length();
     XDrawString(pDsp, wnd, get_gc_for_color(WHITE), posLevelX, posLevelY + pFontStruct->ascent, pOStr, szOStr);
     XFlush(pDsp);
-    pField->unset_redraw_flag();
+    pGame->unset_redraw_flag();
     pField->clear_new_rectangles();
     pField->clear_deleted_rectangles();
     return 0;
@@ -238,6 +240,7 @@ int XRenderer::redraw_full() {
 
 int XRenderer::redraw_delta(double ratio) {
 	DEBUG_TRACE;
+    auto pField = pGame->get_field();
 	std::deque<FieldAddr_t>& deleted_rectangles = pField->get_deleted_rectangles();
 	std::deque<FieldAddr_t>& new_rectangles = pField->get_new_rectangles();
     DEBUG_VAR("%lu\n", deleted_rectangles.size());
@@ -270,7 +273,7 @@ int XRenderer::redraw_delta(double ratio) {
         DEBUG_PRINT("x=%d y=%d\n", i->x, i->y);
 #endif
     XFillRectangles(pDsp, wnd, get_gc_for_color(BLACK), &(*(x_deleted_rectangles.begin())), x_deleted_rectangles.size());
-    XFillRectangles(pDsp, wnd, get_gc_for_color(pField->get_cur_color()), &(*(x_new_rectangles.begin())), x_new_rectangles.size());
+    XFillRectangles(pDsp, wnd, get_gc_for_color(pField->get_current_color()), &(*(x_new_rectangles.begin())), x_new_rectangles.size());
     XFlush(pDsp);
     szPrevOffset = szCurOffset;
     new_rectangles.clear();

@@ -1,3 +1,6 @@
+#ifndef _INCLUDE_TETRISFIELD_H_
+#define _INCLUDE_TETRISFIELD_H_
+
 #include <TetrisFigure.h>
 #include <deque>
 #include <utility>
@@ -27,23 +30,25 @@ public:
     bool is_rotation_possible(TetrisFigurePosition* candidate_pos);
     bool is_move_left_possible();
     bool is_move_right_possible();
+    bool is_game_ended();
     //// movements
     int rotate_clockwise();
     int rotate_counterclockwise();
     int move_left();
     int move_right();
-    void force_landing();
+    int force_landing();
+    int turn();
     // update field layout
     int remove_previous();
-    int render_current();
     int recompose();
     int remove_line(int n_line);
     int remove_full_lines();
-    void set_current_figure(std::unique_ptr<TetrisFigure> pos);
+    void set_current_figure(std::unique_ptr<TetrisFigure>& pos);
     // access methods
-    int get_field_size_x() {return SZ_X;};
-    int get_field_size_y() {return SZ_Y;};
-    short get_vis_y() {return VIS_Y;};
+    int get_field_size_x();
+    int get_field_size_y();
+    short get_vis_y();
+    ENUM_COLORS get_current_color();
     std::unique_ptr<TetrisFigure> get_current_figure();
     std::deque<FieldAddr_t>& get_new_rectangles();
     std::deque<FieldAddr_t>& get_deleted_rectangles();
@@ -58,5 +63,6 @@ public:
     int clear_new_rectangles();
     int get_fld_pnt(int x, int y);
     // debug
-    void print();
+//    void print();
 };
+#endif

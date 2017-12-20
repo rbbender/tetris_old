@@ -1,3 +1,5 @@
+#ifndef _INCLUDE_TETRISFIGUREPOSITION_H_
+#define _INCLUDE_TETRISFIGUREPOSITION_H_
 #include <utility_func.h>
 
 typedef enum {
@@ -42,3 +44,4 @@ const char NUM_FIG_POS_BACK_R = 4;
 const char NUM_FIG_POS_STICK = 2;
 const char NUM_FIG_POS_T = 4;
 
+#endif

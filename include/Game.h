@@ -34,6 +34,7 @@ public:
     void unset_redraw_flag();
     ENUM_COLORS get_cur_color();
     ENUM_COLORS get_next_color();
+    TetrisFigurePosition const * get_next_position();
     void increase_level();
     unsigned get_level();
     void set_exit_flag();

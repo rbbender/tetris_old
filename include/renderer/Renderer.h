@@ -17,13 +17,17 @@ class Game;
 
 class Renderer {
 protected:
+	bool flag_full_redraw;
 	Game* pGame;
     unsigned short szFldBlkX, szFldBlkY; // field size in blocks
-    const unsigned short FLD_VIS_Y;
+    unsigned short FLD_VIS_Y;
 public:
 	Renderer();
+	bool is_full_redraw_required();
+	void set_flag_full_redraw();
+	void unset_flag_full_redraw();
 	virtual int process_input() = 0;
-	virtual int init(Game*) = 0;
+	virtual int init(Game*);
 	virtual int render(double) = 0;
 	virtual ~Renderer();
 };

@@ -10,7 +10,8 @@
 GTKTetrisMainWindow::GTKTetrisMainWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& bld):
 	Gtk::ApplicationWindow(cobject),
 	gtkBuilder(bld),
-	pField(nullptr)
+	pGame(nullptr),
+	renderer()
 {
 	set_title("Tetris");
 	add_action("newgame", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_new_game));
