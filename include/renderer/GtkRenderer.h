@@ -9,6 +9,7 @@
 #define INCLUDE_RENDERER_GTKRENDERER_H_
 
 #include <renderer/Renderer.h>
+#include <map>
 #include <gtkmm/drawingarea.h>
 #include <gtkmm/label.h>
 
@@ -18,6 +19,7 @@ class GtkRenderer: public Renderer {
 	Glib::RefPtr<Gtk::Label> refLabelScore;
 	Glib::RefPtr<Gtk::Label> refLabelLevel;
 	Cairo::RefPtr<Cairo::Context> refCairoContext;
+
 
 public:
 	GtkRenderer();
