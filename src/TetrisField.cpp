@@ -5,7 +5,10 @@
 #include <cassert>
 
 
-TetrisField::TetrisField() {
+TetrisField::TetrisField():
+	current_figure(new TetrisFigure()),
+	prev_figure(new TetrisFigure())
+{
     DEBUG_TRACE;
     DEBUG_VAR("%d", SZ_Y);
     printf("%d\n", SZ_Y);
@@ -46,7 +49,7 @@ int TetrisField::recompose() {
             if ((*current_figure).current_pos->layout[i][k] == 1) {
                 fld[(*current_figure).pos_y + i][(*current_figure).pos_x + k] = (*current_figure).color;
             }
-    (*prev_figure).copy(static_cast<TetrisFigure*>(current_figure.get()));
+    prev_figure->copy(current_figure.get());
     DEBUG_TRACE;
     return 0;
 }
@@ -258,6 +261,7 @@ std::unique_ptr<TetrisFigure> TetrisField::get_current_figure() {
 }
 
 void TetrisField::set_current_figure(std::unique_ptr<TetrisFigure>& p_new_cur) {
+	prev_figure->copy(current_figure.get());
 	auto figure_to_delete = std::move(current_figure);
 	current_figure = std::move(p_new_cur);
 	//is_figure_landed();
@@ -280,9 +284,14 @@ short TetrisField::get_prev_y() {
 }
 
 int TetrisField::turn() {
+	prev_figure->copy(current_figure.get());
 	remove_previous();
-	++((*current_figure).pos_y);
+	++(current_figure->pos_y);
 	recompose();
+	DEBUG_VAR("%d\n", get_cur_x());
+	DEBUG_VAR("%d\n", get_cur_y());
+	DEBUG_VAR("%d\n", get_prev_x());
+	DEBUG_VAR("%d\n", get_prev_y());
 	return 0;
 }
 
@@ -299,5 +308,5 @@ short TetrisField::get_vis_y() {
 }
 
 ENUM_COLORS TetrisField::get_current_color() {
-	return (*current_figure).color;
+	return current_figure->color;
 }

@@ -185,6 +185,7 @@ std::unique_ptr<TetrisFigure> Game::next_figure() {
     next_color = static_cast<ENUM_COLORS> (nxt_col + 1);
     ENUM_FIGURES n = static_cast<ENUM_FIGURES> (rand() % static_cast<int>(FIG_COUNT));
     int pos = rand() % FIG_POS_COUNTS[n];
+    DEBUG_VAR("%d\n", NUM_FIGURES);
     return std::make_unique<TetrisFigure>(n, &FIG_POSITIONS[n][pos], nxt_col);
 };
 

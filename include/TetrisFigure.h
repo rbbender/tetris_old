@@ -9,6 +9,7 @@ struct TetrisFigure {
     short pos_y;
     ENUM_COLORS color;
     ENUM_FIGURES type;
+    TetrisFigure();
     TetrisFigure(ENUM_FIGURES type, TetrisFigurePosition* pos, ENUM_COLORS col);
     int copy(TetrisFigure* src);
     int is_there_collision(TetrisFigurePosition* pos);

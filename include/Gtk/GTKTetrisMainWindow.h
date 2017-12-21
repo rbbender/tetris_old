@@ -29,6 +29,10 @@ protected:
 	const Glib::RefPtr<Gtk::Builder>& gtkBuilder;
 	Game* pGame;
 	GtkRenderer renderer;
+	Gtk::DrawingArea* p_gtk_game_field;
+	Gtk::DrawingArea* p_gtk_next_figure;
+	Gtk::Label* p_gtk_level;
+	Gtk::Label* p_gtk_score;
 
 
 };

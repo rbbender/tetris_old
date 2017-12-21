@@ -10,6 +10,15 @@ TetrisFigure::TetrisFigure(ENUM_FIGURES type, TetrisFigurePosition* pos, ENUM_CO
 {
 }
 
+TetrisFigure::TetrisFigure():
+		current_pos(nullptr),
+		pos_x(0),
+		pos_y(0),
+		color(WHITE),
+		type(FIG_SQUARE)
+	{
+}
+
 int TetrisFigure::rotate_clockwise() {
     current_pos = current_pos->next_pos;
     return 0;
@@ -37,3 +46,4 @@ int TetrisFigure::copy(TetrisFigure* src) {
 	type = src->type;
 	return 0;
 }
+

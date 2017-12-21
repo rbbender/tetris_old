@@ -9,28 +9,37 @@
 #define INCLUDE_RENDERER_GTKRENDERER_H_
 
 #include <renderer/Renderer.h>
-#include <map>
 #include <gtkmm/drawingarea.h>
 #include <gtkmm/label.h>
+#include <colors.h>
+#include <vector>
 
 class GtkRenderer: public Renderer {
-	Glib::RefPtr<Gtk::DrawingArea> refDrAreaGameField;
-	Glib::RefPtr<Gtk::DrawingArea> refDrAreaNextFigure;
-	Glib::RefPtr<Gtk::Label> refLabelScore;
-	Glib::RefPtr<Gtk::Label> refLabelLevel;
-	Cairo::RefPtr<Cairo::Context> refCairoContext;
+	std::vector<Cairo::RefPtr<Cairo::SolidPattern>> vecColorPatterns;
+	unsigned short szPrevOffset, szCurOffset;
+	Gtk::DrawingArea* pDrAreaGameField;
+	Gtk::DrawingArea* pDrAreaNextFigure;
+	Gtk::Label* pLabelScore;
+	Gtk::Label* pLabelLevel;
+	const unsigned SZ_BLOCK_PX = 20;
 
+	void fill_color_patterns();
 
 public:
 	GtkRenderer();
-	void set_ref_game_field_area(Glib::RefPtr<Gtk::DrawingArea>& refDrAreaField);
-	void set_ref_next_figure_area(Glib::RefPtr<Gtk::DrawingArea>& refDrAreaNextFig);
-	void set_ref_score_label(Glib::RefPtr<Gtk::Label>& refScoreLabel);
-	void set_ref_level_label(Glib::RefPtr<Gtk::Label>& refLevelLabel);
-	void set_ref_cairo_target_context(Cairo::RefPtr<Cairo::Context>& cr);
+	void set_p_game_field_area(Gtk::DrawingArea* pDrAreaField);
+	void set_p_next_figure_area(Gtk::DrawingArea* pDrAreaNextFig);
+	void set_p_score_label(Gtk::Label* pScoreLabel);
+	void set_p_level_label(Gtk::Label* pLevelLabel);
 
 	int render(double ratio) override;
 	int process_input() override;
+	int perform_full_field_redraw(const Cairo::RefPtr<Cairo::Context>& cr);
+	int perform_delta_field_redraw(const Cairo::RefPtr<Cairo::Context>& cr);
+	int perform_next_figure_redraw(const Cairo::RefPtr<Cairo::Context>& cr);
+
+	bool on_game_field_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+	bool on_next_figure_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 };
 
 #endif /* INCLUDE_RENDERER_GTKRENDERER_H_ */

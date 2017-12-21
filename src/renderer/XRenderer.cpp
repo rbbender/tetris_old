@@ -9,15 +9,15 @@
 #include <Game.h>
 #include <TetrisField.h>
 
-//static char const* visual_class[] = {
-//   "StaticGray",
-//   "GrayScale",
-//   "StaticColor",
-//   "PseudoColor",
-//   "TrueColor",
-//   "DirectColor"
-//};
-//
+static char const* visual_class[] = {
+   "StaticGray",
+   "GrayScale",
+   "StaticColor",
+   "PseudoColor",
+   "TrueColor",
+   "DirectColor"
+};
+
 int colors_fill(Display* disp, int screen_num) {
     int default_depth;
     Visual* default_visual;
