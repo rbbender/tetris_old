@@ -261,9 +261,9 @@ std::unique_ptr<TetrisFigure> TetrisField::get_current_figure() {
 }
 
 void TetrisField::set_current_figure(std::unique_ptr<TetrisFigure>& p_new_cur) {
-	prev_figure->copy(current_figure.get());
 	auto figure_to_delete = std::move(current_figure);
 	current_figure = std::move(p_new_cur);
+	prev_figure->copy(current_figure.get());
 	//is_figure_landed();
 }
 

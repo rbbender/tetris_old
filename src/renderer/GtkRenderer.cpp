@@ -63,7 +63,7 @@ int GtkRenderer::render(double ratio) {
 	if (ratio > 1.0)
 		ratio = 1.0;
 	szCurOffset = (short)(ratio * SZ_BLOCK_PX);
-	//pGame->set_redraw_flag();
+	pGame->set_redraw_flag();
 	if (pGame->is_redraw_required()) {
 		pDrAreaGameField->queue_draw();
 		pDrAreaNextFigure->queue_draw();
@@ -108,15 +108,11 @@ int GtkRenderer::perform_delta_field_redraw(const Cairo::RefPtr<Cairo::Context>&
 	auto rect_to_delete = pField->get_deleted_rectangles();
 	auto rect_to_add = pField->get_new_rectangles();
 	cr->set_source(vecColorPatterns[0]);
-	for (auto i = rect_to_delete.cbegin(), e = rect_to_delete.cend(); i != e; ++i) {
-		cr->rectangle(i->second * SZ_BLOCK_PX, i->first * SZ_BLOCK_PX + szPrevOffset, SZ_BLOCK_PX, SZ_BLOCK_PX);
-		cr->fill();
-	}
-	for (auto i = rect_to_add.cbegin(), e = rect_to_add.cend(); i != e; ++i) {
-		cr->set_source(vecColorPatterns[pField->get_fld_pnt(i->second, i->first)]);
-		cr->rectangle(i->second * SZ_BLOCK_PX, i->first * SZ_BLOCK_PX + szCurOffset, SZ_BLOCK_PX, SZ_BLOCK_PX);
-		cr->fill();
-	}
+	cr->rectangle(pField->get_prev_x() * SZ_BLOCK_PX, pField->get_prev_y(),
+			4*SZ_BLOCK_PX, 4*SZ_BLOCK_PX);
+	cr->fill();
+	cr->set_source(vecColorPatterns[pField->get_current_color()]);
+
 	szPrevOffset = szCurOffset;
 	pField->clear_deleted_rectangles();
 	pField->clear_new_rectangles();
