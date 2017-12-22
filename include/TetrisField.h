@@ -6,7 +6,6 @@
 #include <utility>
 #include <memory>
 
-typedef std::pair<unsigned short, unsigned short> FieldAddr_t;
 
 class TetrisField {
     enum fld_sz {
@@ -52,6 +51,8 @@ public:
     std::unique_ptr<TetrisFigure> get_current_figure();
     std::deque<FieldAddr_t>& get_new_rectangles();
     std::deque<FieldAddr_t>& get_deleted_rectangles();
+    TetrisFigure* get_current_figure_p();
+    TetrisFigure* get_previous_figure_p();
     short get_cur_x();
     short get_cur_y();
     short get_prev_x();

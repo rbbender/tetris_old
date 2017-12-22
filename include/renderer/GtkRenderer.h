@@ -13,6 +13,7 @@
 #include <gtkmm/label.h>
 #include <colors.h>
 #include <vector>
+#include <utility_func.h>
 
 class GtkRenderer: public Renderer {
 	std::vector<Cairo::RefPtr<Cairo::SolidPattern>> vecColorPatterns;
@@ -22,8 +23,12 @@ class GtkRenderer: public Renderer {
 	Gtk::Label* pLabelScore;
 	Gtk::Label* pLabelLevel;
 	const unsigned SZ_BLOCK_PX = 20;
+	std::vector<std::vector<FieldAddr_t>> blocks_colors;
 
 	void fill_color_patterns();
+	void rebuild_blocks_colors();
+	void draw_blocks_colors(const Cairo::RefPtr<Cairo::Context>& cr);
+	void draw_current_figure(const Cairo::RefPtr<Cairo::Context>& cr);
 
 public:
 	GtkRenderer();

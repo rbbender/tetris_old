@@ -310,3 +310,11 @@ short TetrisField::get_vis_y() {
 ENUM_COLORS TetrisField::get_current_color() {
 	return current_figure->color;
 }
+
+TetrisFigure* TetrisField::get_current_figure_p() {
+	return current_figure.get();
+}
+
+TetrisFigure* TetrisField::get_previous_figure_p() {
+	return prev_figure.get();
+}

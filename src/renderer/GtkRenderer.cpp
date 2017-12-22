@@ -15,8 +15,9 @@ GtkRenderer::GtkRenderer():
 	szCurOffset(0),
 	pDrAreaGameField(nullptr),
 	pDrAreaNextFigure(nullptr),
+	pLabelScore(nullptr),
 	pLabelLevel(nullptr),
-	pLabelScore(nullptr)
+	blocks_colors(NUM_COLORS)
 {
 	// filling in colors
 	fill_color_patterns();
@@ -57,15 +58,16 @@ void GtkRenderer::set_p_level_label(Gtk::Label* pLevelLabel) {
 	pLabelLevel = pLevelLabel;
 }
 
+
+
 int GtkRenderer::render(double ratio) {
 	DEBUG_TRACE;
 	//set_flag_full_redraw();
 	if (ratio > 1.0)
 		ratio = 1.0;
 	szCurOffset = (short)(ratio * SZ_BLOCK_PX);
-	pGame->set_redraw_flag();
 	if (pGame->is_redraw_required()) {
-		pDrAreaGameField->queue_draw();
+		rebuild_blocks_colors();
 		pDrAreaNextFigure->queue_draw();
 		std::string label("Level: ");
 		label += std::to_string(pGame->get_level());
@@ -74,11 +76,7 @@ int GtkRenderer::render(double ratio) {
 		score += std::to_string(pGame->get_score());
 		pLabelScore->set_label(score);
 	}
-	else {
-		auto pField = pGame->get_field();
-		pDrAreaGameField->queue_draw_area(pField->get_prev_x() * SZ_BLOCK_PX,
-				(pField->get_prev_y() - pField->get_vis_y()) * SZ_BLOCK_PX + szPrevOffset, 4 * SZ_BLOCK_PX, 4 * SZ_BLOCK_PX);
-	}
+	pDrAreaGameField->queue_draw();
 	DEBUG_TRACE;
 	return 0;
 }
@@ -106,22 +104,19 @@ int GtkRenderer::perform_delta_field_redraw(const Cairo::RefPtr<Cairo::Context>&
 	DEBUG_TRACE;
 	auto pField = pGame->get_field();
 	auto rect_to_delete = pField->get_deleted_rectangles();
-	auto rect_to_add = pField->get_new_rectangles();
-	cr->set_source(vecColorPatterns[0]);
-	cr->rectangle(pField->get_prev_x() * SZ_BLOCK_PX, pField->get_prev_y(),
-			4*SZ_BLOCK_PX, 4*SZ_BLOCK_PX);
-	cr->fill();
-	cr->set_source(vecColorPatterns[pField->get_current_color()]);
+	std::vector<Cairo::RectangleInt> rect_int_to_delete;
+
 
 	szPrevOffset = szCurOffset;
-	pField->clear_deleted_rectangles();
-	pField->clear_new_rectangles();
 	DEBUG_TRACE;
 	return 0;
 }
 
 int GtkRenderer::perform_next_figure_redraw(const Cairo::RefPtr<Cairo::Context>& cr) {
 	DEBUG_TRACE;
+	cr->set_source(vecColorPatterns[0]);
+	cr->rectangle(0, 0, pDrAreaNextFigure->get_allocated_width(), pDrAreaNextFigure->get_allocated_height());
+	cr->fill();
 	auto next_pos = pGame->get_next_position();
 	auto next_col = pGame->get_next_color();
 	cr->set_source(vecColorPatterns[next_col]);
@@ -142,13 +137,21 @@ int GtkRenderer::process_input() {
 
 bool GtkRenderer::on_game_field_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
 	DEBUG_TRACE;
-	if (pGame->is_redraw_required())
-		perform_full_field_redraw(cr);
-	else
-		perform_delta_field_redraw(cr);
-	unset_flag_full_redraw();
+	draw_blocks_colors(cr);
+	draw_current_figure(cr);
+	pGame->unset_redraw_flag();
 	DEBUG_TRACE;
 	return true;
+}
+
+void GtkRenderer::draw_blocks_colors(const Cairo::RefPtr<Cairo::Context>& cr) {
+	for (int i = 0; i < NUM_COLORS; ++i) {
+		for (auto p = blocks_colors[i].cbegin(), pe = blocks_colors[i].cend(); p != pe; ++p){
+			cr->rectangle(SZ_BLOCK_PX * (p->second), SZ_BLOCK_PX * p->first, SZ_BLOCK_PX, SZ_BLOCK_PX);
+		}
+		cr->set_source(vecColorPatterns[i]);
+		cr->fill();
+	}
 }
 
 bool GtkRenderer::on_next_figure_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
@@ -156,4 +159,31 @@ bool GtkRenderer::on_next_figure_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
 	perform_next_figure_redraw(cr);
 	DEBUG_TRACE;
 	return true;
+}
+
+void GtkRenderer::rebuild_blocks_colors() {
+	// clearing previous info
+	for (auto i = blocks_colors.begin(), e = blocks_colors.end(); i != e; ++i)
+		i->clear();
+	// filling blocks_colors
+	auto pField = pGame->get_field();
+	pField->remove_previous();
+	auto ke = pField->get_field_size_y();
+	auto ie = pField->get_field_size_x();
+	for (int k = pField->get_vis_y(); k < ke; ++k)
+		for (int i = 0; i < ie; ++i)
+			blocks_colors[pField->get_fld_pnt(i, k)].emplace_back(k, i);
+	pField->recompose();
+}
+
+void GtkRenderer::draw_current_figure(const Cairo::RefPtr<Cairo::Context>& cr) {
+	auto p_cur_fig = pGame->get_field()->get_current_figure_p();
+	for (int k = 0; k < p_cur_fig->current_pos->size_y; ++k)
+		for (int i = 0; i < p_cur_fig->current_pos->size_x; ++i)
+			if (p_cur_fig->current_pos->layout[i][k] == 1)
+				cr->rectangle(SZ_BLOCK_PX * (p_cur_fig->pos_x + i),
+						SZ_BLOCK_PX * (p_cur_fig->pos_y + k) + szCurOffset,
+						SZ_BLOCK_PX, SZ_BLOCK_PX);
+	cr->set_source(vecColorPatterns[p_cur_fig->color]);
+	cr->fill();
 }

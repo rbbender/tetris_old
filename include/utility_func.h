@@ -13,6 +13,9 @@
 #define _UTILITY_FUNC_H_
 
 #include <stdio.h>
+#include <utility>
+
+typedef std::pair<unsigned short, unsigned short> FieldAddr_t;
 
 unsigned get_time();
 
