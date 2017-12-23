@@ -25,19 +25,19 @@ GtkRenderer::GtkRenderer():
 
 void GtkRenderer::fill_color_patterns() {
 	// Black
-	vecColorPatterns[0] = Cairo::SolidPattern::create_rgb(0.0, 0.0, 0.0);
+	vecColorPatterns[BLACK] = Cairo::SolidPattern::create_rgb(0.0, 0.0, 0.0);
 	// Red
-	vecColorPatterns[1] = Cairo::SolidPattern::create_rgb(1.0, 0.0, 0.0);
+	vecColorPatterns[RED] = Cairo::SolidPattern::create_rgb(1.0, 0.0, 0.0);
 	// Orange
-	vecColorPatterns[2] = Cairo::SolidPattern::create_rgb(1.0, 0.67, 0.0);
+	vecColorPatterns[ORANGE] = Cairo::SolidPattern::create_rgb(1.0, 0.67, 0.0);
 	// Yellow
-	vecColorPatterns[3] = Cairo::SolidPattern::create_rgb(1.0, 1.0, 0.0);
+	vecColorPatterns[YELLOW] = Cairo::SolidPattern::create_rgb(1.0, 1.0, 0.0);
 	// Green
-	vecColorPatterns[4] = Cairo::SolidPattern::create_rgb(0.0, 1.0, 0.0);
+	vecColorPatterns[GREEN] = Cairo::SolidPattern::create_rgb(0.0, 1.0, 0.0);
 	// Blue
-	vecColorPatterns[5] = Cairo::SolidPattern::create_rgb(0.0, 0.0, 1.0);
+	vecColorPatterns[BLUE] = Cairo::SolidPattern::create_rgb(0.0, 0.0, 1.0);
 	// White
-	vecColorPatterns[6] = Cairo::SolidPattern::create_rgb(1.0, 1.0, 1.0);
+	vecColorPatterns[WHITE] = Cairo::SolidPattern::create_rgb(1.0, 1.0, 1.0);
 }
 
 void GtkRenderer::set_p_game_field_area(
@@ -63,9 +63,10 @@ void GtkRenderer::set_p_level_label(Gtk::Label* pLevelLabel) {
 int GtkRenderer::render(double ratio) {
 	DEBUG_TRACE;
 	//set_flag_full_redraw();
-	if (ratio > 1.0)
-		ratio = 1.0;
+	if (ratio >= 1.0)
+		ratio = 0.0;
 	szCurOffset = (short)(ratio * SZ_BLOCK_PX);
+	DEBUG_VAR("%u\n", szCurOffset);
 	if (pGame->is_redraw_required()) {
 		rebuild_blocks_colors();
 		pDrAreaNextFigure->queue_draw();
@@ -145,12 +146,16 @@ bool GtkRenderer::on_game_field_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
 }
 
 void GtkRenderer::draw_blocks_colors(const Cairo::RefPtr<Cairo::Context>& cr) {
+	cr->set_source(vecColorPatterns[BLACK]);
+	cr->paint();
 	for (int i = 0; i < NUM_COLORS; ++i) {
-		for (auto p = blocks_colors[i].cbegin(), pe = blocks_colors[i].cend(); p != pe; ++p){
-			cr->rectangle(SZ_BLOCK_PX * (p->second), SZ_BLOCK_PX * p->first, SZ_BLOCK_PX, SZ_BLOCK_PX);
+		if (i != BLACK) {
+			for (auto p = blocks_colors[i].cbegin(), pe = blocks_colors[i].cend(); p != pe; ++p){
+				cr->rectangle(SZ_BLOCK_PX * (p->second), SZ_BLOCK_PX * p->first, SZ_BLOCK_PX, SZ_BLOCK_PX);
+			}
+			cr->set_source(vecColorPatterns[i]);
+			cr->fill();
 		}
-		cr->set_source(vecColorPatterns[i]);
-		cr->fill();
 	}
 }
 
@@ -170,20 +175,26 @@ void GtkRenderer::rebuild_blocks_colors() {
 	pField->remove_previous();
 	auto ke = pField->get_field_size_y();
 	auto ie = pField->get_field_size_x();
-	for (int k = pField->get_vis_y(); k < ke; ++k)
+	auto visy = pField->get_vis_y();
+	for (int k = visy; k < ke; ++k)
 		for (int i = 0; i < ie; ++i)
-			blocks_colors[pField->get_fld_pnt(i, k)].emplace_back(k, i);
+			if (pField->get_fld_pnt(i, k) != BLACK)
+				blocks_colors[pField->get_fld_pnt(i, k)].emplace_back(k - visy, i);
 	pField->recompose();
 }
 
 void GtkRenderer::draw_current_figure(const Cairo::RefPtr<Cairo::Context>& cr) {
 	auto p_cur_fig = pGame->get_field()->get_current_figure_p();
+	auto visy = pGame->get_field()->get_vis_y();
 	for (int k = 0; k < p_cur_fig->current_pos->size_y; ++k)
 		for (int i = 0; i < p_cur_fig->current_pos->size_x; ++i)
-			if (p_cur_fig->current_pos->layout[i][k] == 1)
-				cr->rectangle(SZ_BLOCK_PX * (p_cur_fig->pos_x + i),
-						SZ_BLOCK_PX * (p_cur_fig->pos_y + k) + szCurOffset,
-						SZ_BLOCK_PX, SZ_BLOCK_PX);
+			if (p_cur_fig->current_pos->layout[k][i] == 1) {
+				int pix_x = SZ_BLOCK_PX * (p_cur_fig->pos_x + i);
+				int pix_y = SZ_BLOCK_PX * (p_cur_fig->pos_y + k - visy) + szCurOffset;
+				DEBUG_VAR("%d\n", pix_x);
+				DEBUG_VAR("%d\n", pix_y);
+				cr->rectangle(pix_x, pix_y,	SZ_BLOCK_PX, SZ_BLOCK_PX);
+			}
 	cr->set_source(vecColorPatterns[p_cur_fig->color]);
 	cr->fill();
 }

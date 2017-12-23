@@ -25,6 +25,8 @@ protected:
 	void on_menu_quit();
 	// Menu Help
 	void on_menu_help();
+	// Keyboard controls
+	bool on_key_press_event(GdkEventKey* key_event) override;
 
 	const Glib::RefPtr<Gtk::Builder>& gtkBuilder;
 	Game* pGame;

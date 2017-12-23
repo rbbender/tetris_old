@@ -25,6 +25,7 @@ GTKTetrisMainWindow::GTKTetrisMainWindow(BaseObjectType* cobject, const Glib::Re
 	add_action("newgame", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_new_game));
 	add_action("quit", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_quit));
 	add_action("help", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_help));
+	add_events(Gdk::KEY_PRESS_MASK);
 }
 
 GTKTetrisMainWindow::~GTKTetrisMainWindow() {};
@@ -44,4 +45,33 @@ void GTKTetrisMainWindow::on_menu_quit() {
 
 void GTKTetrisMainWindow::on_menu_help() {
 	printf("help\n");
+}
+
+bool GTKTetrisMainWindow::on_key_press_event(GdkEventKey* key_event) {
+	switch (key_event->keyval) {
+	case GDK_KEY_H:
+	case GDK_KEY_h:
+		pGame->process_move_left();
+		break;
+	case GDK_KEY_J:
+	case GDK_KEY_j:
+		pGame->process_rotate_clockwise();
+		break;
+	case GDK_KEY_K:
+	case GDK_KEY_k:
+		pGame->process_rotate_counterclockwise();
+		break;
+	case GDK_KEY_L:
+	case GDK_KEY_l:
+		pGame->process_move_right();
+		break;
+	case GDK_KEY_space:
+		pGame->process_force_landing();
+		break;
+	case GDK_KEY_Q:
+	case GDK_KEY_q:
+		pGame->process_quit();
+		break;
+	}
+	return true;
 }
