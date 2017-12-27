@@ -81,6 +81,8 @@ void Game::game_timer_cb() {
 		tic_ratio = 1.0;
 	//assert(tic_ratio <= 1.0);
 	tic_res = update_state(current_tic, tic_ratio);
+	if (tic_res)
+		rRender.wrap_up();
 	rRender.render(tic_ratio);
 	//game_field->print();
 	//printf("rounded_tic(%u) MSEC_PER_TIC(%u) get_time(%u)\n", rounded_tic, MSEC_PER_TIC, get_time());
@@ -172,6 +174,7 @@ int Game::process_force_landing() {
 }
 
 int Game::process_quit() {
+	to_exit = true;
 	return 0;
 }
 

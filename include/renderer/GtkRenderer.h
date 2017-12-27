@@ -45,6 +45,8 @@ public:
 
 	bool on_game_field_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 	bool on_next_figure_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+
+
 };
 
 #endif /* INCLUDE_RENDERER_GTKRENDERER_H_ */

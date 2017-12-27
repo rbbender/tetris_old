@@ -29,6 +29,7 @@ public:
 	virtual int process_input() = 0;
 	virtual int init(Game*);
 	virtual int render(double) = 0;
+	virtual int wrap_up();
 	virtual ~Renderer();
 };
 

@@ -84,10 +84,12 @@ int GtkRenderer::render(double ratio) {
 
 int GtkRenderer::perform_full_field_redraw(const Cairo::RefPtr<Cairo::Context>& cr) {
 	DEBUG_TRACE;
-	auto pField = pGame->get_field();
 	cr->set_source(vecColorPatterns[0]);
 	cr->rectangle(0, 0, pDrAreaGameField->get_allocated_width(), pDrAreaGameField->get_allocated_height());
 	cr->fill();
+	if (!pGame)
+		return 0;
+	auto pField = pGame->get_field();
 	for (int k = pField->get_vis_y(); k < pField->get_field_size_y(); ++k)
 		for (int i = 0; i < pField->get_field_size_x(); ++i) {
 			if (pField->get_fld_pnt(i, k) != BLACK) {
@@ -118,6 +120,8 @@ int GtkRenderer::perform_next_figure_redraw(const Cairo::RefPtr<Cairo::Context>&
 	cr->set_source(vecColorPatterns[0]);
 	cr->rectangle(0, 0, pDrAreaNextFigure->get_allocated_width(), pDrAreaNextFigure->get_allocated_height());
 	cr->fill();
+	if (!pGame)
+		return 0;
 	auto next_pos = pGame->get_next_position();
 	auto next_col = pGame->get_next_color();
 	cr->set_source(vecColorPatterns[next_col]);

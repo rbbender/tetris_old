@@ -37,3 +37,11 @@ void Renderer::set_flag_full_redraw() {
 void Renderer::unset_flag_full_redraw() {
 	flag_full_redraw = false;
 }
+
+int Renderer::wrap_up() {
+	pGame = nullptr;
+	szFldBlkX = 0;
+	szFldBlkY = 0;
+	FLD_VIS_Y = 0;
+	return 0;
+}

@@ -75,3 +75,9 @@ bool GTKTetrisMainWindow::on_key_press_event(GdkEventKey* key_event) {
 	}
 	return true;
 }
+
+void GTKTetrisMainWindow::on_game_over() {
+	renderer.wrap_up();
+	delete pGame;
+	pGame = nullptr;
+}
