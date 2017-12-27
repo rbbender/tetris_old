@@ -174,6 +174,8 @@ void GtkRenderer::rebuild_blocks_colors() {
 	// clearing previous info
 	for (auto i = blocks_colors.begin(), e = blocks_colors.end(); i != e; ++i)
 		i->clear();
+	if (!pGame)
+		return;
 	// filling blocks_colors
 	auto pField = pGame->get_field();
 	pField->remove_previous();
@@ -188,6 +190,8 @@ void GtkRenderer::rebuild_blocks_colors() {
 }
 
 void GtkRenderer::draw_current_figure(const Cairo::RefPtr<Cairo::Context>& cr) {
+	if (!pGame)
+		return;
 	auto p_cur_fig = pGame->get_field()->get_current_figure_p();
 	auto visy = pGame->get_field()->get_vis_y();
 	for (int k = 0; k < p_cur_fig->current_pos->size_y; ++k)
@@ -201,4 +205,8 @@ void GtkRenderer::draw_current_figure(const Cairo::RefPtr<Cairo::Context>& cr) {
 			}
 	cr->set_source(vecColorPatterns[p_cur_fig->color]);
 	cr->fill();
+}
+
+void GtkRenderer::wrap_up() {
+	pGame = nullptr;
 }

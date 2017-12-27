@@ -23,6 +23,7 @@ GTKTetrisMainWindow::GTKTetrisMainWindow(BaseObjectType* cobject, const Glib::Re
 	renderer.set_p_score_label(p_gtk_score);
 	renderer.set_p_level_label(p_gtk_level);
 	add_action("newgame", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_new_game));
+	add_action("cancelgame", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_game_over));
 	add_action("quit", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_quit));
 	add_action("help", sigc::mem_fun(*this, &GTKTetrisMainWindow::on_menu_help));
 	add_events(Gdk::KEY_PRESS_MASK);
