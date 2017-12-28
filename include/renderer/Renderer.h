@@ -30,6 +30,7 @@ public:
 	virtual int init(Game*);
 	virtual int render(double) = 0;
 	virtual int wrap_up();
+	virtual void clean_up() = 0;
 	virtual ~Renderer();
 };
 

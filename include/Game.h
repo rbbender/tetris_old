@@ -24,11 +24,11 @@ typedef enum {
 class Game {
 public:
 	Game(Renderer& render);
+	~Game();
 	void game_timer_cb();
 	TetrisField* get_field();
     ENUM_TIC_RESULT tic(double tick_ratio);
     unsigned get_score();
-    bool is_game_ended();
     bool is_redraw_required();
     void set_redraw_flag();
     void unset_redraw_flag();
@@ -37,7 +37,8 @@ public:
     TetrisFigurePosition const * get_next_position();
     void increase_level();
     unsigned get_level();
-    void set_exit_flag();
+    bool set_game_end_flag(bool flagVal);
+    bool is_game_ended();
     void exit();
 
     int process_move_left();
@@ -74,8 +75,8 @@ protected:
 	int tic_res;
 	unsigned score;
     ENUM_COLORS next_color;
-    bool to_exit;
     bool to_redraw;
+    bool to_end_game;
     std::unique_ptr<TetrisFigure> p_next_figure;
 };
 

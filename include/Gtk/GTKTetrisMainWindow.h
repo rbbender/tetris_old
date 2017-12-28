@@ -17,6 +17,8 @@ public:
 	GTKTetrisMainWindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& bld);
 	~GTKTetrisMainWindow();
 
+	void destroy_game();
+
 protected:
 	// Signal handlers
 	// Menu new game

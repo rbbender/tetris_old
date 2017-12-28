@@ -6,6 +6,7 @@
  */
 
 #include <renderer/GtkRenderer.h>
+#include <Gtk/GTKTetrisMainWindow.h>
 #include <Game.h>
 
 GtkRenderer::GtkRenderer():
@@ -70,17 +71,26 @@ int GtkRenderer::render(double ratio) {
 		ratio = 0.0;
 	szCurOffset = (short)(ratio * SZ_BLOCK_PX);
 	DEBUG_VAR("%u\n", szCurOffset);
-	if (pGame->is_redraw_required()) {
-		rebuild_blocks_colors();
-		pDrAreaNextFigure->queue_draw();
-		std::string label("Level: ");
-		label += std::to_string(pGame->get_level());
-		pLabelLevel->set_label(label);
-		std::string score("Score: ");
-		score += std::to_string(pGame->get_score());
-		pLabelScore->set_label(score);
+	if (pGame) {
+		if (pGame->is_redraw_required()) {
+			rebuild_blocks_colors();
+			pDrAreaNextFigure->queue_draw();
+			std::string label("Level: ");
+			label += std::to_string(pGame->get_level());
+			pLabelLevel->set_label(label);
+			std::string score("Score: ");
+			score += std::to_string(pGame->get_score());
+			pLabelScore->set_label(score);
+		}
+		pDrAreaGameField->queue_draw();
 	}
-	pDrAreaGameField->queue_draw();
+	else {
+		pDrAreaGameField->queue_draw();
+		pDrAreaNextFigure->queue_draw();
+		pLabelLevel->set_label("Level: 1");
+		pLabelLevel->set_label("Score: 0");
+		show_game_stats();
+	}
 	DEBUG_TRACE;
 	return 0;
 }
@@ -145,6 +155,12 @@ int GtkRenderer::process_input() {
 
 bool GtkRenderer::on_game_field_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
 	DEBUG_TRACE;
+	if (!pGame) {
+		draw_blocks_colors(cr);
+		pLabelScore->set_label("Score: 0");
+		pLabelLevel->set_label("Level: 1");
+		return true;
+	}
 	draw_blocks_colors(cr);
 	draw_current_figure(cr);
 	pGame->unset_redraw_flag();
@@ -170,6 +186,8 @@ bool GtkRenderer::on_next_figure_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
 	DEBUG_TRACE;
 	perform_next_figure_redraw(cr);
 	DEBUG_TRACE;
+	if (!pGame)
+		return false;
 	return true;
 }
 
@@ -211,6 +229,8 @@ void GtkRenderer::draw_current_figure(const Cairo::RefPtr<Cairo::Context>& cr) {
 }
 
 int GtkRenderer::wrap_up() {
+	for (auto i = blocks_colors.begin(), ie = blocks_colors.end(); i != ie; ++i)
+		i->clear();
 	std::string strFinalResult("Game is over. Final score is: ");
 	strFinalResult += std::to_string(pGame->get_score());
 	pGameResultsLabel->set_label(strFinalResult);
@@ -219,11 +239,16 @@ int GtkRenderer::wrap_up() {
 }
 
 void GtkRenderer::show_game_stats() {
-	pGameResultsDialog->show_all();
+	DEBUG_TRACE;
+	int result = pGameResultsDialog->run();
+	DEBUG_VAR("%d\n", result);
+	pGameResultsDialog->hide();
+	DEBUG_TRACE;
 }
 
 void GtkRenderer::set_widgets_from_builder(
 		const Glib::RefPtr<Gtk::Builder>& builder) {
+	builder->get_widget_derived("gtkMainWindow", pTetrisMainWnd);
 	builder->get_widget("gtkGameField", pDrAreaGameField);
 	builder->get_widget("gtkNextFigDraw", pDrAreaNextFigure);
 	builder->get_widget("gtkLevelLabel", pLabelLevel);
@@ -231,6 +256,18 @@ void GtkRenderer::set_widgets_from_builder(
 	builder->get_widget("gtkGameResultsWindow", pGameResultsDialog);
 	builder->get_widget("gtkGameResultsWindow_ResultsLabel", pGameResultsLabel);
 	builder->get_widget("gtkGameResultsWindow_OkButton", pGameResultsOkButton);
+	pGameResultsDialog->signal_response().connect(sigc::mem_fun(*this, &GtkRenderer::on_game_stats_ok));
+}
+
+void GtkRenderer::connect_callbacks() {
 	pDrAreaGameField->signal_draw().connect(sigc::mem_fun(*this, &GtkRenderer::on_game_field_draw));
 	pDrAreaNextFigure->signal_draw().connect(sigc::mem_fun(*this, &GtkRenderer::on_next_figure_draw));
+}
+
+void GtkRenderer::on_game_stats_ok(int response) {
+	DEBUG_VAR("%d\n", response);
+}
+
+void GtkRenderer::clean_up() {
+	pTetrisMainWnd->destroy_game();
 }

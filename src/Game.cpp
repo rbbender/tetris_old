@@ -24,8 +24,8 @@ Game::Game(Renderer& render):
 	tic_res(0),
 	score(0),
 	next_color(WHITE),
-	to_exit(false),
-	to_redraw(true)
+	to_redraw(true),
+	to_end_game(false)
 {
 	time_t seed = time(NULL);
     srand(seed);
@@ -91,6 +91,8 @@ void Game::game_timer_cb() {
 	DEBUG_VAR("%llu\n", diff);
 	if (!tic_res)
 		Glib::signal_timeout().connect_once(sigc::mem_fun(*this, &Game::game_timer_cb), diff);
+	else
+		rRender.clean_up();
 };
 
 TetrisField* Game::get_field() {
@@ -118,10 +120,6 @@ unsigned long long Game::get_time_to_next_tic_ms(unsigned long long time_since_s
 	return (get_tic() + 1) * MSEC_PER_TIC - time_since_start_ms;
 }
 
-bool Game::is_game_ended() {
-	return gameField.is_game_ended();
-}
-
 bool Game::is_redraw_required() {
 	return to_redraw;
 }
@@ -144,10 +142,6 @@ ENUM_COLORS Game::get_next_color() {
 
 unsigned Game::get_level() {
 	return current_lvl;
-}
-
-void Game::set_exit_flag() {
-	to_exit = true;
 }
 
 void Game::exit() {
@@ -174,12 +168,25 @@ int Game::process_force_landing() {
 }
 
 int Game::process_quit() {
-	set_exit_flag();
+	set_game_end_flag(true);
 	return 0;
 }
 
 const TetrisFigurePosition* Game::get_next_position() {
 	return (*p_next_figure).current_pos;
+}
+
+bool Game::set_game_end_flag(bool flagVal) {
+	to_end_game = flagVal;
+	return to_end_game;
+}
+
+bool Game::is_game_ended() {
+	return to_end_game;
+}
+
+Game::~Game() {
+	DEBUG_VAR("%p\n", this);
 }
 
 std::unique_ptr<TetrisFigure> Game::next_figure() {
@@ -201,7 +208,7 @@ void Game::increase_level() {
 ENUM_TIC_RESULT Game::tic(double tic_ratio) {
     DEBUG_TRACE;
     ENUM_TIC_RESULT result = TIC_RESULT_PLAY_ANIMATION;
-    if (to_exit)
+    if (is_game_ended())
         return TIC_RESULT_GAME_OVER;
     if (gameField.is_figure_landed()) {
         gameField.recompose();
@@ -209,7 +216,7 @@ ENUM_TIC_RESULT Game::tic(double tic_ratio) {
         {
         	auto cur_fig = gameField.get_current_figure();
         }
-        if (is_game_ended())
+        if (set_game_end_flag(gameField.is_game_ended()))
             return TIC_RESULT_GAME_OVER;
         gameField.set_current_figure(p_next_figure);
         p_next_figure = next_figure();

@@ -44,6 +44,7 @@ class GtkRenderer: public Renderer {
 public:
 	GtkRenderer();
 	void set_widgets_from_builder(const Glib::RefPtr<Gtk::Builder>& builder);
+	void connect_callbacks();
 	void set_p_game_field_area(Gtk::DrawingArea* pDrAreaField);
 	void set_p_next_figure_area(Gtk::DrawingArea* pDrAreaNextFig);
 	void set_p_score_label(Gtk::Label* pScoreLabel);
@@ -59,6 +60,8 @@ public:
 	bool on_next_figure_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 	int wrap_up();
 	void show_game_stats();
+	void on_game_stats_ok(int response);
+	void clean_up() override;
 
 
 };
