@@ -10,18 +10,29 @@
 
 #include <renderer/Renderer.h>
 #include <gtkmm/drawingarea.h>
+#include <gtkmm/builder.h>
 #include <gtkmm/label.h>
+#include <gtkmm/dialog.h>
+#include <gtkmm/button.h>
 #include <colors.h>
 #include <vector>
 #include <utility_func.h>
 
+class GTKTetrisMainWindow;
+
 class GtkRenderer: public Renderer {
 	std::vector<Cairo::RefPtr<Cairo::SolidPattern>> vecColorPatterns;
 	unsigned short szPrevOffset, szCurOffset;
+	GTKTetrisMainWindow* pTetrisMainWnd;
 	Gtk::DrawingArea* pDrAreaGameField;
 	Gtk::DrawingArea* pDrAreaNextFigure;
 	Gtk::Label* pLabelScore;
 	Gtk::Label* pLabelLevel;
+
+	Gtk::Dialog* pGameResultsDialog;
+	Gtk::Label* pGameResultsLabel;
+	Gtk::Button* pGameResultsOkButton;
+
 	const unsigned SZ_BLOCK_PX = 20;
 	std::vector<std::vector<FieldAddr_t>> blocks_colors;
 
@@ -32,6 +43,7 @@ class GtkRenderer: public Renderer {
 
 public:
 	GtkRenderer();
+	void set_widgets_from_builder(const Glib::RefPtr<Gtk::Builder>& builder);
 	void set_p_game_field_area(Gtk::DrawingArea* pDrAreaField);
 	void set_p_next_figure_area(Gtk::DrawingArea* pDrAreaNextFig);
 	void set_p_score_label(Gtk::Label* pScoreLabel);
@@ -45,7 +57,8 @@ public:
 
 	bool on_game_field_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 	bool on_next_figure_draw(const Cairo::RefPtr<Cairo::Context>& cr);
-	void wrap_up();
+	int wrap_up();
+	void show_game_stats();
 
 
 };

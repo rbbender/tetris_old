@@ -17,6 +17,9 @@ GtkRenderer::GtkRenderer():
 	pDrAreaNextFigure(nullptr),
 	pLabelScore(nullptr),
 	pLabelLevel(nullptr),
+	pGameResultsDialog(nullptr),
+	pGameResultsLabel(nullptr),
+	pGameResultsOkButton(nullptr),
 	blocks_colors(NUM_COLORS)
 {
 	// filling in colors
@@ -207,6 +210,27 @@ void GtkRenderer::draw_current_figure(const Cairo::RefPtr<Cairo::Context>& cr) {
 	cr->fill();
 }
 
-void GtkRenderer::wrap_up() {
+int GtkRenderer::wrap_up() {
+	std::string strFinalResult("Game is over. Final score is: ");
+	strFinalResult += std::to_string(pGame->get_score());
+	pGameResultsLabel->set_label(strFinalResult);
 	pGame = nullptr;
+	return 0;
+}
+
+void GtkRenderer::show_game_stats() {
+	pGameResultsDialog->show_all();
+}
+
+void GtkRenderer::set_widgets_from_builder(
+		const Glib::RefPtr<Gtk::Builder>& builder) {
+	builder->get_widget("gtkGameField", pDrAreaGameField);
+	builder->get_widget("gtkNextFigDraw", pDrAreaNextFigure);
+	builder->get_widget("gtkLevelLabel", pLabelLevel);
+	builder->get_widget("gtkScoreLabel", pLabelScore);
+	builder->get_widget("gtkGameResultsWindow", pGameResultsDialog);
+	builder->get_widget("gtkGameResultsWindow_ResultsLabel", pGameResultsLabel);
+	builder->get_widget("gtkGameResultsWindow_OkButton", pGameResultsOkButton);
+	pDrAreaGameField->signal_draw().connect(sigc::mem_fun(*this, &GtkRenderer::on_game_field_draw));
+	pDrAreaNextFigure->signal_draw().connect(sigc::mem_fun(*this, &GtkRenderer::on_next_figure_draw));
 }

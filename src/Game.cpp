@@ -174,7 +174,7 @@ int Game::process_force_landing() {
 }
 
 int Game::process_quit() {
-	to_exit = true;
+	set_exit_flag();
 	return 0;
 }
 
